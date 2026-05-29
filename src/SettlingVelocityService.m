@@ -113,6 +113,27 @@ classdef SettlingVelocityService < handle
             v(v < 0) = 0;
         end
 
+        function v = velocityFecalPellets(grid, cfg)
+            % VELOCITYFECALPELLETS  Stokes sinking for dense fecal pellets [cm/s]
+            %
+            % Fecal pellets are solid and dense (not porous flocs).
+            % Uses: w = (2/9) * (del_rho / rho_f) * g * r^2 / nu
+            %
+            % r = grid.dcomb/2 = lower-bound radius of each bin [cm].
+            % At bin 8: dcomb(8) = d0 * 2^(7/3) = 0.01008 cm, r = 0.00504 cm.
+            % del_rho = 0.15 g/cm^3 gives w_ref ~ 69.8 m/day at bin 8;
+            % after surface depth correction (nu ~0.01008 cm^2/s at 19.6 C)
+            % the model prints 69.2 m/day, consistent with Turner 2002.
+            del_rho = 0.15;
+            if isprop(cfg, 'fp_excess_density') && ~isempty(cfg.fp_excess_density)
+                del_rho = cfg.fp_excess_density;
+            end
+            r = grid.dcomb / 2;   % radius [cm] from volume-equivalent diameter
+            v = (2/9) .* (del_rho ./ cfg.rho_fl) .* cfg.g .* r.^2 ./ cfg.kvisc;
+            v(~isfinite(v)) = 0;
+            v(v < 0) = 0;
+        end
+
         % ----------------- helpers -----------------
 
         function d_cm = getDiameterCm(grid, config)

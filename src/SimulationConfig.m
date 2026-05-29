@@ -65,6 +65,40 @@ classdef SimulationConfig < matlab.mixin.Copyable
         % Code Runtime Options
         tracer = false;         % Integrate tracer as well [false=no, true=yes]
         proc_substeps = 10;     % substeps for explicit process-rate update in ColumnRHS
+
+        % Zooplankton grazing (Stemmann 2004)
+        enable_zoo  = false;   % turn grazing on/off
+        zoo_Zc      = 0.307;   % filter feeder max [m^-3], Stemmann 2004
+        zoo_c       = 1e-4;    % clearance rate [m^3 ind^-1 day^-1]
+        zoo_Zf      = 0.063;   % flux feeder max [m^-3], Stemmann 2004
+        zoo_s       = 1e-4;    % capture cross-section [m^2 ind^-1]
+        zoo_p       = 0.3;     % egestion fraction
+        zoo_ic      = 7;       % fecal pellet target = bin 8 (~115 um)
+
+        % Fecal pellet sinking (Stokes law with dense pellet excess density)
+        fp_excess_density = 0.15;  % excess density [g/cm^3] (~150 kg/m^3, cylindrical pellets)
+
+        % Fecal pellet cross-coagulation stickiness with marine snow
+        % Fecal pellets are compact (fractal dim ~2.8), less TEP -> less sticky.
+        % No direct measurement exists; 0.5 is a conservative starting value.
+        fp_alpha_cross = 0.5;
+
+        % Microbial remineralization (first-order loss on Y and Y_fp)
+        % Applied as operator-split exact decay: Y *= exp(-r*dt)
+        enable_microbe     = false;  % turn on/off
+        microbe_r0         = 0.03;   % base rate [day^-1] (Iversen & Ploug 2013)
+        microbe_fp_mult    = 1.0;    % r multiplier for fecal vs aggregate (e.g. 1.5)
+        microbe_use_temp   = false;  % Q10 temperature scaling on/off
+        microbe_q10        = 2.0;    % Q10 factor (Iversen & Ploug 2013)
+        microbe_tref_C     = 20;     % reference temperature [deg C]
+        microbe_gamma_size = 0.0;    % size exponent: r ~ d^(-gamma), 0 = size-independent
+        microbe_dref_cm    = 0.01;   % reference diameter for size scaling [cm] (= 100 um)
+
+        % Surface production (1-D only — applies to layer 1, bin surface_pp_bin)
+        enable_surface_pp   = false;   % surface phytoplankton source on/off
+        surface_pp_bin      = 1;       % which size bin gets the source
+        surface_pp_rate     = 1e-8;    % constant source strength [bv day^-1]
+        surface_pp_mu       = 0;       % growth rate [day^-1]; if > 0, uses mu*phi mode instead
     end
     
     methods

@@ -10,7 +10,7 @@ classdef ColumnTransport
     %   Top boundary (k=1): no inflow from above, flux(0) = 0.
     %   Bottom boundary: particles exit at k=n_z (open base).
     %
-    % Diffusion (flux-form, zero-flux at both boundaries):
+    % Diffusion (flux-form, zero-flux at top, open flux at bottom):
     %   diff_flux(k+1/2) = Kz_face(k+1/2) * (Y(k+1,:) - Y(k,:)) / dz
     %   dY(k,:)/dt = (diff_flux(k+1/2) - diff_flux(k-1/2)) / dz
     %   Kz at faces = arithmetic mean of adjacent cell values.
@@ -57,8 +57,11 @@ classdef ColumnTransport
                 % diffusive flux at interior faces
                 diff_flux      = Kz_face .* (Y(2:end,:) - Y(1:end-1,:)) / dz;  % (n_z-1) x n_sec
 
-                % add zero-flux boundaries (top and bottom face = 0)
-                diff_flux_full = [zeros(1, n_sec); diff_flux; zeros(1, n_sec)];  % (n_z+1) x n_sec
+                % top face: zero-flux
+                % open bottom: assume concentration below domain = 0
+                Kz_bot         = Kz_day(end);
+                diff_flux_bot  = -Kz_bot * Y(end, :) / dz;
+                diff_flux_full = [zeros(1, n_sec); diff_flux; diff_flux_bot];  % (n_z+1) x n_sec
                 diff_tend      = (diff_flux_full(2:end,:) - diff_flux_full(1:end-1,:)) / dz;
             end
 
@@ -76,6 +79,21 @@ classdef ColumnTransport
             cfl_adv  = max(abs(w_z(:))) * dt / dz;
             cfl_diff = max(Kz_z(:)) * day_to_sec * dt / dz^2;
             cfl      = max(cfl_adv, cfl_diff);
+        end
+
+        function flux = bottomFluxDay(Y, w_z, Kz_z, dz)
+            % BOTTOMFLUXDAY  Total biovolume flux leaving at the bottom [units/day].
+            %
+            % Returns a 1 x n_sec vector: flux per size bin leaving the bottom.
+            % Positive = material leaving domain.
+            %
+            % Advective part: w(n_z) * Y(n_z,:)
+            % Diffusive part: Kz(n_z) * Y(n_z,:) / dz  (open BC, concentration below = 0)
+            day_to_sec    = 8.64e4;
+            Kz_day_bot    = Kz_z(end) * day_to_sec;
+            flux_adv      = w_z(end, :) .* max(Y(end, :), 0);
+            flux_diff     = Kz_day_bot * max(Y(end, :), 0) / dz;
+            flux          = flux_adv + flux_diff;
         end
     end
 end

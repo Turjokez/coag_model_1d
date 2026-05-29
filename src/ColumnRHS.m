@@ -21,7 +21,8 @@ classdef ColumnRHS < handle
         col_grid    % ColumnGrid
         profile     % DepthProfile
         coag_rhs    % CoagulationRHS — process rates without sinking
-        w_z         % n_z x n_sec, sinking speed [m/day]
+        w_z         % n_z x n_sec, aggregate sinking speed [m/day]
+        w_fp_z      % n_z x n_sec, fecal pellet sinking speed [m/day]
 
         % depth-scaling vectors (n_z x 1 each)
         brown_scale
@@ -35,6 +36,14 @@ classdef ColumnRHS < handle
         b1_shear
         b25_ds
         b1_ds
+
+        % depth-varying D_max: D_max(k) = A * eps(k)^(-1/4)
+        % More turbulence (high eps) -> smaller D_max -> more fragmentation.
+        % A calibrated so D_max ~ 1 mm at surface (eps ~ 1e-9 m^2/s^3).
+        Dmax_A = 9.39e-6
+
+        zoo        % ZooplanktonGrazing object (empty if disabled)
+        cross_coag % FecalCrossCoag object (empty if disabled)
     end
 
     methods
@@ -48,6 +57,14 @@ classdef ColumnRHS < handle
             obj.cfg                = cfg.copy();
             obj.cfg.enable_sinking = false;
             obj.cfg.box_depth      = [];
+
+            % if operator-split disagg is selected, disable legacy disagg
+            % inside CoagulationRHS — same fix as CoagulationSimulation does.
+            % Without this, both legacy (c3=0.02) and operator-split run together.
+            if isprop(cfg,'enable_disagg') && cfg.enable_disagg && ...
+               isprop(cfg,'disagg_mode')   && strcmpi(cfg.disagg_mode,'operator_split')
+                obj.cfg.enable_disagg = false;
+            end
 
             % build beta component matrices (used for per-depth scaling)
             % Each component is stored already scaled by its base physical factor
@@ -97,34 +114,73 @@ classdef ColumnRHS < handle
             [Dm, Dp] = LinearProcessBuilder.disaggregationMatrices(obj.cfg);
             obj.coag_rhs = CoagulationRHS(betas, lin, Dm, Dp, obj.cfg, size_grid);
 
-            % sinking speed field
-            obj.w_z = obj.buildWindField();
+            % sinking speed fields
+            obj.w_z    = obj.buildWindField();
+            obj.w_fp_z = obj.buildFpWindField();
 
             % depth-scaling vectors
             obj.brown_scale = profile.brownianScale(cfg);
             obj.shear_scale = profile.shearScale(cfg);
             obj.ds_scale    = profile.dsScale(cfg);
+
+            % build zoo object if grazing is enabled
+            if isprop(cfg, 'enable_zoo') && cfg.enable_zoo
+                obj.zoo = ZooplanktonGrazing( ...
+                    'Zc', cfg.zoo_Zc, ...
+                    'c',  cfg.zoo_c,  ...
+                    'Zf', cfg.zoo_Zf, ...
+                    's',  cfg.zoo_s,  ...
+                    'p',  cfg.zoo_p,  ...
+                    'ic', cfg.zoo_ic);
+            else
+                obj.zoo = [];
+            end
+
+            % build cross-coag object (fecal pellets sticking to marine snow)
+            % uses reference sinking speeds at surface (depth scaling applied in stepY)
+            if isprop(cfg, 'enable_zoo') && cfg.enable_zoo
+                w_fp_ref  = obj.w_fp_z(1, :)';   % surface fecal speed [m/day]
+                w_agg_ref = obj.w_z(1, :)';        % surface agg speed  [m/day]
+                obj.cross_coag = FecalCrossCoag(cfg, size_grid, w_fp_ref, w_agg_ref);
+            else
+                obj.cross_coag = [];
+            end
         end
 
-        function Y_new = stepY(obj, Y, dt)
+        function [Y_new, Yfp_new] = stepY(obj, Y, dt, Yfp)
             % STEPY  One full time step: transport then depth-scaled process rates.
-            % Y: n_z x n_sec,  dt: day
+            %
+            % Y:    n_z x n_sec  — aggregate biovolume
+            % Yfp:  n_z x n_sec  — fecal pellet biovolume (optional, zeros if absent)
+            % Both arrays are evolved one step and returned.
+            %
+            % Fecal pellets (Yfp):
+            %   - Undergo the same sinking transport as aggregates (same w_z for now).
+            %   - Receive fecal production from zooplankton grazing.
+            %   - Do NOT undergo coagulation or disaggregation in this step.
 
-            % 1. transport (advection + diffusion)
+            n_z = obj.col_grid.n_z;
+
+            % initialise Yfp to zeros if not provided (backward compatible)
+            if nargin < 4 || isempty(Yfp)
+                Yfp = zeros(size(Y));
+            end
+
+            % 1. transport aggregates (advection + diffusion)
             Y_new = ColumnTransport.step(Y, obj.w_z, obj.profile.Kz, obj.col_grid.dz, dt);
 
-            % 2. process rates with depth-specific kernel scaling
-            % use substeps to keep explicit Euler stable
-            n_sub = max(1, round(obj.cfg_orig.proc_substeps));
+            % 1b. transport fecal pellets (faster Stokes-based sinking speed)
+            Yfp_new = ColumnTransport.step(Yfp, obj.w_fp_z, obj.profile.Kz, obj.col_grid.dz, dt);
+
+            % 2. coagulation process rates at each depth layer
+            n_sub  = max(1, round(obj.cfg_orig.proc_substeps));
             dt_sub = dt / n_sub;
-            n_z = obj.col_grid.n_z;
 
             for k = 1:n_z
                 sb = obj.brown_scale(k);
                 ss = obj.shear_scale(k);
                 sd = obj.ds_scale(k);
 
-                % scaled beta matrices for this depth layer (constant across substeps)
                 b25_k = sb .* obj.b25_brown + ss .* obj.b25_shear + sd .* obj.b25_ds;
                 b1_k  = sb .* obj.b1_brown  + ss .* obj.b1_shear  + sd .* obj.b1_ds;
 
@@ -136,9 +192,86 @@ classdef ColumnRHS < handle
                 Y_new(k,:) = v_k';
             end
 
-            % 3. operator_split disagg (if enabled)
+            % 3. operator-split grazing at each depth layer (if enabled)
+            % Fecal production goes to Yfp at the correct bin, not back into Y.
+            if ~isempty(obj.zoo)
+                day_to_sec = obj.cfg_orig.day_to_sec;
+                n_sec      = obj.cfg_orig.n_sections;
+                target_bin = max(1, min(n_sec, round(obj.zoo.ic) + 1));
+
+                for k = 1:n_z
+                    v_k   = Y_new(k, :)';
+                    w_cms = obj.w_z(k, :)' .* (100 / day_to_sec);
+
+                    if ~isempty(obj.profile) && ~isempty(obj.profile.Zc)
+                        [dvdt, fp_flux] = obj.zoo.graze(v_k, w_cms, ...
+                                              obj.profile.Zc(k), obj.profile.Zf(k));
+                    else
+                        [dvdt, fp_flux] = obj.zoo.graze(v_k, w_cms);
+                    end
+
+                    % update aggregate array (losses only, no fecal return here)
+                    Y_new(k, :) = max(v_k + dt .* dvdt, 0)';
+
+                    % add fecal production to fecal pellet array at this depth
+                    Yfp_new(k, target_bin) = max(0, Yfp_new(k, target_bin) + dt * fp_flux);
+                end
+            end
+
+            % 3b. cross-coagulation: fecal pellets stick to marine snow at each layer
+            % DS dominates (fecal sinks ~17x faster). alpha_cross = 0.5 by default.
+            if ~isempty(obj.cross_coag)
+                for k = 1:n_z
+                    sd = obj.ds_scale(k);
+                    [Y_new(k,:), Yfp_new(k,:)] = obj.cross_coag.apply( ...
+                        Y_new(k,:)', Yfp_new(k,:)', dt, sd);
+                end
+            end
+
+            % 4. surface production — layer 1 only, aggregate array only
+            if isprop(obj.cfg_orig,'enable_surface_pp') && obj.cfg_orig.enable_surface_pp
+                ib = max(1, min(obj.cfg_orig.n_sections, obj.cfg_orig.surface_pp_bin));
+                use_mu = isprop(obj.cfg_orig,'surface_pp_mu') && obj.cfg_orig.surface_pp_mu > 0;
+                if use_mu
+                    Y_new(1, ib) = Y_new(1, ib) * (1 + dt * obj.cfg_orig.surface_pp_mu);
+                else
+                    Y_new(1, ib) = Y_new(1, ib) + dt * obj.cfg_orig.surface_pp_rate;
+                end
+            end
+
+            % 5. operator-split disagg on aggregates only
             if obj.useOperatorSplitDisagg()
                 Y_new = obj.applyDisaggSplit(Y_new);
+            end
+
+            % 6. microbial remineralization (first-order, operator-split)
+            % Exact decay Y *= exp(-r*dt) — never produces negatives.
+            % r can scale with temperature (Q10) and size (d^-gamma).
+            if isprop(obj.cfg_orig,'enable_microbe') && obj.cfg_orig.enable_microbe
+                d_cm = obj.size_grid.dcomb(:);   % n_sec x 1, bin diameter [cm]
+                for k = 1:n_z
+                    % base rate
+                    r = obj.cfg_orig.microbe_r0;
+
+                    % optional Q10 temperature scaling
+                    if obj.cfg_orig.microbe_use_temp
+                        T_C = obj.profile.T_K(k) - 273.15;
+                        r = r * obj.cfg_orig.microbe_q10 ^ ...
+                            ((T_C - obj.cfg_orig.microbe_tref_C) / 10);
+                    end
+
+                    % optional size scaling: smaller particles degrade faster
+                    if obj.cfg_orig.microbe_gamma_size ~= 0
+                        r_vec = r .* (d_cm / obj.cfg_orig.microbe_dref_cm) .^ ...
+                                    (-obj.cfg_orig.microbe_gamma_size);
+                    else
+                        r_vec = r * ones(obj.cfg_orig.n_sections, 1);
+                    end
+
+                    % exact exponential decay (stable for any r*dt)
+                    Y_new(k,:)   = Y_new(k,:)'   .* exp(-dt .* r_vec);
+                    Yfp_new(k,:) = Yfp_new(k,:)' .* exp(-dt .* r_vec .* obj.cfg_orig.microbe_fp_mult);
+                end
             end
         end
 
@@ -156,6 +289,20 @@ classdef ColumnRHS < handle
             w      = scale * w_ref(:)';                    % n_z x n_sec
         end
 
+        function w = buildFpWindField(obj)
+            % Fecal pellet sinking: Stokes law with dense-pellet excess density.
+            % Same viscosity correction per depth layer as aggregates.
+            if isprop(obj.cfg_orig,'enable_sinking') && ~logical(obj.cfg_orig.enable_sinking)
+                w = zeros(obj.col_grid.n_z, obj.cfg_orig.n_sections);
+                return;
+            end
+            v_cms  = SettlingVelocityService.velocityFecalPellets(obj.size_grid, obj.cfg_orig);
+            w_ref  = (v_cms / 100) * obj.cfg_orig.day_to_sec;  % m/day
+            nu_ref = obj.cfg_orig.kvisc;
+            scale  = nu_ref ./ obj.profile.nu;                  % n_z x 1
+            w      = scale * w_ref(:)';                         % n_z x n_sec
+        end
+
         function ok = useOperatorSplitDisagg(obj)
             ok = isprop(obj.cfg_orig,'enable_disagg') && obj.cfg_orig.enable_disagg ...
               && isprop(obj.cfg_orig,'disagg_mode') ...
@@ -167,7 +314,22 @@ classdef ColumnRHS < handle
             n_z = obj.col_grid.n_z;
             for k = 1:n_z
                 v_k    = Y(k, :)';
-                Y(k,:) = DisaggregationOperatorSplit.apply(v_k, obj.size_grid, obj.cfg_orig)';
+                cfg_k = obj.cfg_orig;
+
+                % Depth-varying D_max from eps(k) when available.
+                if ~isempty(obj.profile) && isprop(obj.profile, 'eps') ...
+                        && numel(obj.profile.eps) >= k ...
+                        && isfinite(obj.profile.eps(k)) && obj.profile.eps(k) > 0
+                    eps_cm = obj.profile.eps(k);        % cm^2/s^3
+                    eps_m  = eps_cm / 1e4;              % m^2/s^3
+                    dmax_m = obj.Dmax_A * eps_m^(-1/4); % high eps -> small D_max
+                    dmax_cm = 100 * dmax_m;
+
+                    cfg_k = obj.cfg_orig.copy();
+                    cfg_k.disagg_dmax_cm = dmax_cm;
+                end
+
+                Y(k,:) = DisaggregationOperatorSplit.apply(v_k, obj.size_grid, cfg_k)';
             end
         end
     end

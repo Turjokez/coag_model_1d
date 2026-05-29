@@ -1,0 +1,33 @@
+Running n_sections = 15 ...
+ColumnSimulation: CFL = 0.2244, dt = 1.000 day, dz = 50.0 m
+Running n_sections = 20 ...
+ColumnSimulation: CFL = 0.4593, dt = 1.000 day, dz = 50.0 m
+Running n_sections = 25 ...
+[Warning: CFL = 0.940 > 0.9. Consider smaller dt or coarser dz.] 
+[> In <a href="matlab:matlab.lang.internal.introspective.errorDocCallback('ColumnSimulation/run', '/Users/turjo/Documents/coag_model/1d-model-testing/src/ColumnSimulation.m', 68)" style="font-weight:bold">ColumnSimulation/run</a> (<a href="matlab: opentoline('/Users/turjo/Documents/coag_model/1d-model-testing/src/ColumnSimulation.m',68,0)">line 68</a>)
+In <a href="matlab:matlab.lang.internal.introspective.errorDocCallback('run_full_1d_nsections_compare', '/Users/turjo/Documents/coag_model/1d-model-testing/scripts/run_full_1d_nsections_compare.m', 71)" style="font-weight:bold">run_full_1d_nsections_compare</a> (<a href="matlab: opentoline('/Users/turjo/Documents/coag_model/1d-model-testing/scripts/run_full_1d_nsections_compare.m',71,0)">line 71</a>)] 
+ColumnSimulation: CFL = 0.9400, dt = 1.000 day, dz = 50.0 m
+Running n_sections = 30 ...
+[Warning: CFL = 1.924 > 0.9. Consider smaller dt or coarser dz.] 
+[> In <a href="matlab:matlab.lang.internal.introspective.errorDocCallback('ColumnSimulation/run', '/Users/turjo/Documents/coag_model/1d-model-testing/src/ColumnSimulation.m', 68)" style="font-weight:bold">ColumnSimulation/run</a> (<a href="matlab: opentoline('/Users/turjo/Documents/coag_model/1d-model-testing/src/ColumnSimulation.m',68,0)">line 68</a>)
+In <a href="matlab:matlab.lang.internal.introspective.errorDocCallback('run_full_1d_nsections_compare', '/Users/turjo/Documents/coag_model/1d-model-testing/scripts/run_full_1d_nsections_compare.m', 71)" style="font-weight:bold">run_full_1d_nsections_compare</a> (<a href="matlab: opentoline('/Users/turjo/Documents/coag_model/1d-model-testing/scripts/run_full_1d_nsections_compare.m',71,0)">line 71</a>)] 
+ColumnSimulation: CFL = 1.9240, dt = 1.000 day, dz = 50.0 m
+
+--- Summary ---
+  n       top_bin(mm)   disagg_to(m)  bv_t365         deep_maxbin/n     at_ceiling? 
+  15      0.570         0             2.0756e-05      15 / 15           true        
+  20      1.810         225           2.0770e-05      20 / 20           true        
+  25      5.747         725           2.0770e-05      21 / 25           false       
+  30      18.246        975           2.0770e-05      21 / 30           false       
+
+--- Total bv at snapshots ---
+  n       t=30            t=90            t=180           t=365         
+  15      1.1863e-05      1.5346e-05      1.8685e-05      2.0756e-05    
+  20      1.1864e-05      1.5884e-05      1.8797e-05      2.0770e-05    
+  25      1.1864e-05      1.5884e-05      1.8797e-05      2.0770e-05    
+  30      1.1864e-05      1.5884e-05      1.8797e-05      2.0770e-05    
+
+Figures saved:
+  nsec_compare_depth.png
+  nsec_compare_convergence.png
+  nsec_compare_dmax.png

@@ -77,32 +77,39 @@ classdef ColumnSimulation < handle
             n_z   = obj.col_grid.n_z;
             n_sec = obj.cfg.n_sections;
 
-            % storage: (n_t x n_z x n_sec)
-            Y_hist = zeros(n_t, n_z, n_sec);
+            % storage: aggregates (n_t x n_z x n_sec), fecal pellets same size
+            Y_hist   = zeros(n_t, n_z, n_sec);
+            Yfp_hist = zeros(n_t, n_z, n_sec);
 
-            % run
-            Y = Y0;
-            Y_hist(1, :, :) = Y;
+            % initial conditions: aggregates from defaultIC, fecal starts at zero
+            Y   = Y0;
+            Yfp = zeros(n_z, n_sec);
+
+            Y_hist(1, :, :)   = Y;
+            Yfp_hist(1, :, :) = Yfp;
             t = t0;
             i_out = 2;
 
             while t < tf - 1e-10
-                Y = obj.rhs.stepY(Y, dt);
+                [Y, Yfp] = obj.rhs.stepY(Y, dt, Yfp);
                 t = t + dt;
                 if i_out <= n_t && abs(t - t_out(i_out)) < dt * 0.5
-                    Y_hist(i_out, :, :) = Y;
+                    Y_hist(i_out, :, :)   = Y;
+                    Yfp_hist(i_out, :, :) = Yfp;
                     i_out = i_out + 1;
                 end
             end
 
             % pack result
-            result.time           = t_out;
-            result.concentrations = Y_hist;
-            result.col_grid       = obj.col_grid;
-            result.profile        = obj.profile;
-            result.cfg            = obj.cfg;
-            result.cfl            = cfl;
-            result.w_z            = obj.rhs.w_z;
+            result.time                 = t_out;
+            result.concentrations       = Y_hist;
+            result.fecal_concentrations = Yfp_hist;   % separate fecal pellet array
+            result.col_grid             = obj.col_grid;
+            result.profile              = obj.profile;
+            result.cfg                  = obj.cfg;
+            result.cfl                  = cfl;
+            result.w_z                  = obj.rhs.w_z;
+            result.w_fp_z               = obj.rhs.w_fp_z;
         end
 
         function Y0 = defaultInitialCondition(obj)

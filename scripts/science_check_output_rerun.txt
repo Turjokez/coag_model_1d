@@ -1,0 +1,19 @@
+Running science check (t=365, n=20)...
+ColumnSimulation: CFL = 0.4593, dt = 1.000 day, dz = 50.0 m
+
+--- Science check summary ---
+  Surface layer (z=25m):
+    t=365 bv     = 2.1865e-06
+    bv / total   = 10.5%
+  Deep layer (z=975m):
+    t=365 bv     = 6.2348e-07
+    bv / total   = 3.0%
+  Bottom flux at t=365 = 2.5895e-06 bv m^-2 day^-1
+  PP flux at t=365     = 5.3122e-06 bv m^-2 day^-1
+  flux / PP ratio      = 0.487  (~48.7% of production reaches 1000m)
+
+Figures saved:
+  sci_depth_profile.png
+  sci_size_spectrum.png
+  sci_dmax_physics.png
+  sci_budget.png

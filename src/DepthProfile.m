@@ -17,6 +17,8 @@ classdef DepthProfile
         nu      % kinematic viscosity [cm^2/s], n_z x 1
         eps     % turbulent dissipation [cm^2/s^3], n_z x 1
         Kz      % vertical diffusivity [m^2/s], n_z x 1
+        Zc      % filter feeder concentration [m^-3], n_z x 1
+        Zf      % flux feeder concentration [m^-3], n_z x 1
     end
 
     methods
@@ -29,6 +31,8 @@ classdef DepthProfile
             obj.nu  = nu(:);
             obj.eps = eps(:);
             obj.Kz  = Kz(:);
+            obj.Zc  = [];
+            obj.Zf  = [];
         end
 
         function scale = brownianScale(obj, cfg)
@@ -61,45 +65,51 @@ classdef DepthProfile
 
     methods (Static)
         function p = typical(z_centers)
-            % TYPICAL  Simple but realistic open-ocean profile.
-            % T: linear 20 C at surface to 4 C at 2000 m
-            % S: constant 35 psu
-            % rho: 1.025 + small depth gradient
-            % nu: increases with depth as water gets colder
-            % eps: exponential decay with scale depth 100 m
-            % Kz: large in mixed layer (top 100 m), small below
+            % Simple open-ocean profile with Stemmann zoo profiles.
             z = z_centers(:);
             H = max(z);
             if H < 1, H = 2000; end
 
-            % temperature: linear from 20 C at surface to 4 C at bottom
             T_C = 20 - 16 * z / H;
             T_K = T_C + 273.15;
-
-            % salinity: constant
-            S = 35 * ones(size(z));
-
-            % density [g/cm^3]: simple linear approximation
+            S   = 35 * ones(size(z));
             rho = 1.025 + 0.0005 * z / H;
+            nu  = 0.01 * exp(0.02 * (20 - T_C));
 
-            % kinematic viscosity [cm^2/s]:
-            % nu ~ 0.01 at 20 C, increases ~37% at 4 C
-            % simple exponential fit: nu = 0.01 * exp(0.02*(20-T_C))
-            nu = 0.01 * exp(0.02 * (20 - T_C));
+            eps_surf = 1e-4;
+            H_mix    = 100;
+            eps = eps_surf * exp(-z / H_mix) + 1e-8;
 
-            % turbulent dissipation [cm^2/s^3]:
-            % surface: 1e-4 cm^2/s^3 (= 1e-8 W/kg), decays with 100 m scale
-            % 1 W/kg = 1 m^2/s^3 = 1e4 cm^2/s^3
-            eps_surf     = 1e-4;      % cm^2/s^3
-            H_mix        = 100;       % m
-            eps = eps_surf * exp(-z / H_mix) + 1e-8;  % floor at 1e-8
-
-            % vertical diffusivity [m^2/s]:
-            % mixed layer (~100 m): 1e-3 m^2/s, below: 1e-5 m^2/s
             Kz = 1e-5 * ones(size(z));
             Kz(z <= H_mix) = 1e-3;
 
             p = DepthProfile(z, T_K, S, rho, nu, eps, Kz);
+
+            % add depth-varying zoo from Stemmann 2004 Fig 1
+            [p.Zc, p.Zf] = DepthProfile.stemmannZoo(z);
+        end
+
+        function [Zc, Zf] = stemmannZoo(z)
+            % Stemmann 2004 Fig 1 zooplankton profiles.
+            % Relative abundance x max concentration for each group.
+            % Filter feeders:  max = 0.307 m^-3, peak ~350 m
+            % Flux feeders:    max = 0.063 m^-3, increases with depth
+            z = z(:);
+
+            % control points from Fig 1 [depth_m, relative_abundance]
+            z_pts = [0; 100; 200; 300; 400; 500; 600; 700; 800; 900; 1000];
+
+            ff_rel  = [0.10; 0.30; 0.70; 0.95; 1.00; 0.85; 0.60; 0.40; 0.25; 0.15; 0.10];
+            flx_rel = [0.05; 0.10; 0.20; 0.30; 0.40; 0.50; 0.60; 0.70; 0.80; 0.90; 1.00];
+
+            % interpolate to model depths, clamp to [0,1]
+            ff  = interp1(z_pts, ff_rel,  z, 'pchip', 'extrap');
+            flx = interp1(z_pts, flx_rel, z, 'pchip', 'extrap');
+            ff  = max(0, min(1, ff));
+            flx = max(0, min(1, flx));
+
+            Zc = 0.307 * ff;   % filter feeders [m^-3]
+            Zf = 0.063 * flx;  % flux feeders   [m^-3]
         end
     end
 end
