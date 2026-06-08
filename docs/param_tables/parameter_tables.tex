@@ -347,18 +347,6 @@ ind\,m$^{-3}$ &
 
 \end{longtable}
 
-\vspace{10pt}
-\noindent\textbf{Optimization note.}
-The loss function is
-$\mathcal{L} = \sum_{z,\,k} \bigl[\log_{10} N_\mathrm{model}(z,k) - \log_{10} N_\mathrm{obs}(z,k)\bigr]^{2}$,
-where $k$ indexes size bin and $z$ indexes depth layer.
-Log-space weighting ensures that small and large particles contribute equally.
-Observations: EXPORTS processed UVP particle size distributions, North Atlantic station.
-See \texttt{scripts/optimize/run\_alpha\_grid\_search.m} for the grid-search implementation
-and \texttt{scripts/optimize/loss\_size\_dist.m} for the loss function.
-
-\vspace{10pt}
-
 \bibliographystyle{plainnat}
 \bibliography{references}
 

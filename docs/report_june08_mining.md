@@ -33,19 +33,19 @@ where $w = \alpha \, m^b$ is the power-law sinking speed and $D_i$ is the fecal 
 
 In the discrete sectional code, this becomes two terms per bin. The bite rate fraction is:
 
-$$\text{bite\_fac}(i) = e_m(i) \cdot \frac{\delta_m^{\text{eff}}}{v_{\text{av}}(i)} \tag{3}$$
+$$\text{bite_fac}(i) = e_m(i) \cdot \frac{\delta_m^{\text{eff}}}{v_{\text{av}}(i)} \tag{3}$$
 
 where $v_{\text{av}}(i) = 1.5 \cdot v_{\text{lower}}(i)$ is the average biovolume per particle in bin $i$ in cm³, and $\delta_m^{\text{eff}} = \min(\delta_m, v_{\text{av}}(i))$ caps the bite so it cannot exceed the volume of the particle itself. The update for bin $i$ is:
 
-$$\frac{\partial Q_i}{\partial t}\bigg|_{\text{mine}} = -2 \cdot \text{bite\_fac}(i) \cdot Q_i + \text{bite\_fac}(i+1) \cdot Q_{i+1} + D_i \tag{4}$$
+$$\frac{\partial Q_i}{\partial t}\bigg|_{\text{mine}} = -2 \cdot \text{bite_fac}(i) \cdot Q_i + \text{bite_fac}(i+1) \cdot Q_{i+1} + D_i \tag{4}$$
 
 The factor of 2 comes from Equations 22 and 23 in Stemmann Part I. There are two separate mass flows leaving bin $i$ per contact: the bite mass removed by the animal, and the shrunken particle crossing the lower boundary of bin $i$ into bin $i-1$. Both contribute one `bite_fac(i) * Q_i` to the loss from bin $i$, so the total loss is twice that. These are physically separate things, so the factor of 2 is correct.
 
 Mass budget check. Summing Equation 4 over all bins:
 
-$$\frac{d Q_{\text{total}}}{dt}\bigg|_{\text{mine}} = -\sum_i \text{bite\_fac}(i) \cdot Q_i$$
+$$\frac{d Q_{\text{total}}}{dt}\bigg|_{\text{mine}} = -\sum_i \text{bite_fac}(i) \cdot Q_i$$
 
-The fecal return is $p \sum_i \text{bite\_fac}(i) \cdot Q_i$. The net loss from the combined aggregate and fecal pellet system is $(1-p) \sum_i \text{bite\_fac}(i) \cdot Q_i$, which is the assimilated fraction that the animal respires. That is physically correct.
+The fecal return is $p \sum_i \text{bite_fac}(i) \cdot Q_i$. The net loss from the combined aggregate and fecal pellet system is $(1-p) \sum_i \text{bite_fac}(i) \cdot Q_i$, which is the assimilated fraction that the animal respires. That is physically correct.
 
 ---
 
