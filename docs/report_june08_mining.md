@@ -19,7 +19,11 @@ I added the micro-zooplankton partial consumption term (mining) . It is coded, t
 
 The mining term is derived in Stemmann and colleagues (2004, Part I), Section 4.7.3, Equations 20 to 25. The encounter rate for mining zooplankton is:
 
-$$e_m(i) = w_i \cdot s \cdot Z_m \tag{1}$$
+Equation 1:
+
+$$
+e_m(i) = w_i \, s \, Z_m
+$$
 
 where $w_i$ is the settling speed of size bin $i$ in m day⁻¹, $s$ is the capture cross-section area of one miner in m² individual⁻¹, and $Z_m$ is the concentration of mining zooplankton in ind m⁻³. This has the same flux-feeding structure as the existing flux feeder term. Miners find particles by detecting the hydrodynamic wake as the particle settles past them.
 
@@ -27,25 +31,43 @@ Each contact removes a fixed mass $\delta_m$, which is approximately the gut vol
 
 The full sectional equation (Equation 25 in Stemmann Part I) for the rate of change of mass in section $i$ is:
 
-$$\frac{\partial Q_i}{\partial t}\bigg|_{\text{mine}} = \alpha^{-1} s \, \delta_m \, Z_m \left( m_{i+1}^{b-1} Q_{i+1} - 2^b m_i^{b-1} Q_i \right) + D_i \tag{2}$$
+Equation 2:
+
+$$
+\left.\frac{\partial Q_i}{\partial t}\right|_{\mathrm{mine}}
+= \alpha^{-1} s \, \delta_m \, Z_m
+\left( m_{i+1}^{b-1} Q_{i+1} - 2^b m_i^{b-1} Q_i \right) + D_i
+$$
 
 where $w = \alpha \, m^b$ is the power-law sinking speed and $D_i$ is the fecal production routed to size bins above the fecal bin $i_c$ (Equation 27 in the same paper).
 
 In the discrete sectional code, this becomes two terms per bin. The bite rate fraction is:
 
-$$\text{bite_fac}(i) = e_m(i) \cdot \frac{\delta_m^{\text{eff}}}{v_{\text{av}}(i)} \tag{3}$$
+Equation 3:
 
-where $v_{\text{av}}(i) = 1.5 \cdot v_{\text{lower}}(i)$ is the average biovolume per particle in bin $i$ in cm³, and $\delta_m^{\text{eff}} = \min(\delta_m, v_{\text{av}}(i))$ caps the bite so it cannot exceed the volume of the particle itself. The update for bin $i$ is:
+$$
+B_i = e_m(i) \, \frac{\delta_m^{\mathrm{eff}}}{v_{\mathrm{av}}(i)}
+$$
 
-$$\frac{\partial Q_i}{\partial t}\bigg|_{\text{mine}} = -2 \cdot \text{bite_fac}(i) \cdot Q_i + \text{bite_fac}(i+1) \cdot Q_{i+1} + D_i \tag{4}$$
+where $B_i$ is the bite fraction for bin $i$, $v_{\mathrm{av}}(i) = 1.5 \cdot v_{\mathrm{lower}}(i)$ is the average biovolume per particle in bin $i$ in cm³, and $\delta_m^{\mathrm{eff}} = \min(\delta_m, v_{\mathrm{av}}(i))$ caps the bite so it cannot exceed the volume of the particle itself. The update for bin $i$ is:
+
+Equation 4:
+
+$$
+\left.\frac{\partial Q_i}{\partial t}\right|_{\mathrm{mine}}
+= -2 B_i Q_i + B_{i+1} Q_{i+1} + D_i
+$$
 
 The factor of 2 comes from Equations 22 and 23 in Stemmann Part I. There are two separate mass flows leaving bin $i$ per contact: the bite mass removed by the animal, and the shrunken particle crossing the lower boundary of bin $i$ into bin $i-1$. Both contribute one `bite_fac(i) * Q_i` to the loss from bin $i$, so the total loss is twice that. These are physically separate things, so the factor of 2 is correct.
 
 Mass budget check. Summing Equation 4 over all bins:
 
-$$\frac{d Q_{\text{total}}}{dt}\bigg|_{\text{mine}} = -\sum_i \text{bite_fac}(i) \cdot Q_i$$
+$$
+\left.\frac{d Q_{\mathrm{total}}}{dt}\right|_{\mathrm{mine}}
+= -\sum_i B_i Q_i
+$$
 
-The fecal return is $p \sum_i \text{bite_fac}(i) \cdot Q_i$. The net loss from the combined aggregate and fecal pellet system is $(1-p) \sum_i \text{bite_fac}(i) \cdot Q_i$, which is the assimilated fraction that the animal respires. That is physically correct.
+The fecal return is $p \sum_i B_i Q_i$. The net loss from the combined aggregate and fecal pellet system is $(1-p) \sum_i B_i Q_i$, which is the assimilated fraction that the animal respires. That is physically correct.
 
 ---
 
@@ -175,4 +197,3 @@ The figure shows total biovolume versus bin number at 10 days, summed across all
 *Figure 1. Total biovolume versus bin number at 10 days. Mining off (solid black) versus mining on (dashed blue). Run `scripts/physics/run_mining_test.m` to regenerate.*
 
 Full verification (`run_verify_all.m`): **12 tests passed, 0 failed**. Full column run: Courant number = 0.77, final total biovolume = 1.23e-5 cm³ cm⁻³, no negative concentrations.
-
