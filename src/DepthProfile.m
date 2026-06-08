@@ -19,6 +19,7 @@ classdef DepthProfile
         Kz      % vertical diffusivity [m^2/s], n_z x 1
         Zc      % filter feeder concentration [m^-3], n_z x 1
         Zf      % flux feeder concentration [m^-3], n_z x 1
+        Zm      % mining zooplankton concentration [m^-3], n_z x 1
     end
 
     methods
@@ -33,6 +34,7 @@ classdef DepthProfile
             obj.Kz  = Kz(:);
             obj.Zc  = [];
             obj.Zf  = [];
+            obj.Zm  = [];
         end
 
         function scale = brownianScale(obj, cfg)
@@ -86,14 +88,15 @@ classdef DepthProfile
             p = DepthProfile(z, T_K, S, rho, nu, eps, Kz);
 
             % add depth-varying zoo from Stemmann 2004 Fig 1
-            [p.Zc, p.Zf] = DepthProfile.stemmannZoo(z);
+            [p.Zc, p.Zf, p.Zm] = DepthProfile.stemmannZoo(z);
         end
 
-        function [Zc, Zf] = stemmannZoo(z)
+        function [Zc, Zf, Zm] = stemmannZoo(z)
             % Stemmann 2004 Fig 1 zooplankton profiles.
             % Relative abundance x max concentration for each group.
             % Filter feeders:  max = 0.307 m^-3, peak ~350 m
             % Flux feeders:    max = 0.063 m^-3, increases with depth
+            % Miners:          max = 250 m^-3, high near surface
             z = z(:);
 
             % control points from Fig 1 [depth_m, relative_abundance]
@@ -101,15 +104,19 @@ classdef DepthProfile
 
             ff_rel  = [0.10; 0.30; 0.70; 0.95; 1.00; 0.85; 0.60; 0.40; 0.25; 0.15; 0.10];
             flx_rel = [0.05; 0.10; 0.20; 0.30; 0.40; 0.50; 0.60; 0.70; 0.80; 0.90; 1.00];
+            min_rel = [1.00; 0.80; 0.60; 0.45; 0.35; 0.28; 0.22; 0.18; 0.14; 0.12; 0.10];
 
             % interpolate to model depths, clamp to [0,1]
             ff  = interp1(z_pts, ff_rel,  z, 'pchip', 'extrap');
             flx = interp1(z_pts, flx_rel, z, 'pchip', 'extrap');
+            minz = interp1(z_pts, min_rel, z, 'pchip', 'extrap');
             ff  = max(0, min(1, ff));
             flx = max(0, min(1, flx));
+            minz = max(0, min(1, minz));
 
             Zc = 0.307 * ff;   % filter feeders [m^-3]
             Zf = 0.063 * flx;  % flux feeders   [m^-3]
+            Zm = 250   * minz; % mining copepods [m^-3]
         end
     end
 end

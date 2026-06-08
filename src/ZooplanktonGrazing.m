@@ -79,5 +79,59 @@ classdef ZooplanktonGrazing
             % New usage (nargout == 2): caller gets fp_flux separately and
             % routes it to Y_fp. Nothing added to dvdt here.
         end
+
+        function [dvdt, fp_flux] = mine(obj, v, w_cms, av_vol, Zm, dm_gut, s_area, min_bin)
+            % MINE  Partial consumption (mining) following Stemmann 2004 Part I Eq. 25.
+            %
+            % Small copepods take a fixed bite dm_gut from each particle contact.
+            % Particles shrink from bin i toward bin i-1 (not removed entirely).
+            % Mining only applied to bins >= min_bin (particles large enough to mine).
+            % Fecal fraction p of consumed mass goes to fp_flux.
+            %
+            % Inputs:
+            %   v        - n_sec x 1 biovolume concentration
+            %   w_cms    - n_sec x 1 settling velocity [cm/s]
+            %   av_vol   - n_sec x 1 average particle biovolume per bin [cm^3]
+            %   Zm       - miner concentration [ind m^-3]
+            %   dm_gut   - mass per contact [cm^3] (gut volume)
+            %   s_area   - cross-section area [m^2 ind^-1]
+            %   min_bin  - first bin where mining is active (default 12, ~254 um)
+            %
+            % Outputs:
+            %   dvdt    - n_sec x 1 tendency [bv day^-1] for aggregate array
+            %   fp_flux - scalar [bv day^-1], fecal production from mining
+            if nargin < 8 || isempty(min_bin), min_bin = 12; end
+
+            v      = v(:);
+            w_cms  = w_cms(:);
+            av_vol = av_vol(:);
+            n      = numel(v);
+
+            day_to_sec = 8.64e4;
+            w_mday = (w_cms / 100) * day_to_sec;  % m/day
+
+            % encounter rate per bin [day^-1]: same flux-feeding structure
+            em = w_mday * s_area * Zm;
+
+            % bite rate: dm_gut limited to particle volume
+            dm_eff   = min(dm_gut, av_vol);
+            bite_fac = em .* dm_eff ./ av_vol;
+
+            % zero out bins below min_bin — small particles are not mined
+            bite_fac(1:min_bin-1) = 0;
+
+            dvdt = zeros(n, 1);
+            for i = 1:n
+                % two losses from bin i: bite mass + shrunken particle exits bin
+                dvdt(i) = dvdt(i) - 2 * bite_fac(i) * v(i);
+                % gain from bin i+1 shrinking in
+                if i < n
+                    dvdt(i) = dvdt(i) + bite_fac(i+1) * v(i+1);
+                end
+            end
+
+            % fecal: fraction p of total consumed mass (active bins only)
+            fp_flux = obj.p * sum(bite_fac .* v);
+        end
     end
 end

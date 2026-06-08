@@ -228,6 +228,35 @@ classdef ColumnRHS < handle
                 end
             end
 
+            % 3c. micro-zoo mining at each depth layer (if enabled)
+            % Particles shrink bin-by-bin; fecal goes to Yfp at target bin.
+            if isprop(obj.cfg_orig,'enable_mining') && obj.cfg_orig.enable_mining && ~isempty(obj.zoo)
+                av_vol     = obj.size_grid.av_vol(:);   % cm^3 per bin
+                day_to_sec = obj.cfg_orig.day_to_sec;
+                n_sec      = obj.cfg_orig.n_sections;
+                target_bin = max(1, min(n_sec, round(obj.zoo.ic) + 1));
+
+                for k = 1:n_z
+                    v_k   = Y_new(k, :)';
+                    w_cms = obj.w_z(k, :)' .* (100 / day_to_sec);
+                    if ~isempty(obj.profile) && isprop(obj.profile, 'Zm') && ~isempty(obj.profile.Zm)
+                        Zm = obj.profile.Zm(k);
+                    else
+                        Zm = obj.cfg_orig.mining_Zm;
+                    end
+
+                    min_bin = obj.cfg_orig.mining_min_bin;
+                    [dvdt_m, fp_m] = obj.zoo.mine(v_k, w_cms, av_vol, ...
+                                         Zm, ...
+                                         obj.cfg_orig.mining_dm, ...
+                                         obj.cfg_orig.mining_s, ...
+                                         min_bin);
+
+                    Y_new(k, :)            = max(v_k + dt .* dvdt_m, 0)';
+                    Yfp_new(k, target_bin) = max(0, Yfp_new(k, target_bin) + dt * fp_m);
+                end
+            end
+
             % 4. surface production — layer 1 only, aggregate array only
             if isprop(obj.cfg_orig,'enable_surface_pp') && obj.cfg_orig.enable_surface_pp
                 ib = max(1, min(obj.cfg_orig.n_sections, obj.cfg_orig.surface_pp_bin));

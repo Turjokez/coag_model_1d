@@ -1,0 +1,365 @@
+% parameter_tables.tex
+%
+% Landscape A4. Compile with:
+%   pdflatex parameter_tables.tex
+%   bibtex   parameter_tables
+%   pdflatex parameter_tables.tex
+%   pdflatex parameter_tables.tex
+
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[landscape, top=2cm, bottom=2cm, left=2cm, right=2cm]{geometry}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{microtype}
+
+% column types
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+
+% suppress page numbers (tables only)
+\pagestyle{plain}
+
+% ---- helper macro for the "how we know" column ----
+% usage: \conf{text}
+\newcommand{\conf}[1]{\textit{#1}}
+
+\begin{document}
+
+\begin{center}
+  {\large\bfseries Model Parameter Tables}\\[4pt]
+\end{center}
+
+% =============================================================
+% TABLE 1 — Know well: fix these
+% =============================================================
+% Column widths sum to ~25 cm (fits landscape A4 with 4 cm total margin)
+% Sym(2) | Desc(5.5) | Value(3) | Units(3.5) | Ref(5) | Basis(6) = 25 cm
+
+\begin{longtable}{L{2cm} L{5.5cm} C{3cm} L{3.5cm} L{5cm} L{6cm}}
+
+\caption{Group~1: well constrained parameters, fixed in all runs.}
+\label{tab:known} \\
+
+\toprule
+\textbf{Symbol} &
+\textbf{Description} &
+\textbf{Value} &
+\textbf{Units} &
+\textbf{Reference} &
+\textbf{Notes} \\
+\midrule
+\endfirsthead
+
+\multicolumn{6}{l}{\small\textit{Table~\ref{tab:known} continued\ldots}} \\[2pt]
+\toprule
+\textbf{Symbol} &
+\textbf{Description} &
+\textbf{Value} &
+\textbf{Units} &
+\textbf{Reference} &
+\textbf{Notes} \\
+\midrule
+\endhead
+
+\midrule
+\multicolumn{6}{r}{\small\textit{continued on next page}} \\
+\endfoot
+
+\bottomrule
+\endlastfoot
+
+% --- Physical constants ---
+$\rho_f$ &
+Seawater (fluid) density &
+1.0275 &
+g\,cm$^{-3}$ &
+\citet{millero1981} &
+\conf{Standard seawater. Millero \& Poisson provide the international equation of state; value changes $<0.1\%$ over North Atlantic conditions.} \\[4pt]
+
+$\nu$ &
+Kinematic viscosity &
+0.01 &
+cm$^{2}$\,s$^{-1}$ &
+\citet{sharqawy2010} &
+\conf{Seawater at 20\,\textdegree C. Varies $\sim$30\% between 5 and 25\,\textdegree C; currently held fixed (temperature scaling for future work).} \\[4pt]
+
+$g$ &
+Gravitational acceleration &
+980 &
+cm\,s$^{-2}$ &
+--- &
+\conf{Standard value; invariant for ocean column depths of interest.} \\[4pt]
+
+$k_B$ &
+Boltzmann constant &
+$1.3\times10^{-16}$ &
+erg\,K$^{-1}$ &
+--- &
+\conf{NIST fundamental constant; enters only the Brownian kernel.} \\[4pt]
+
+% --- Settling law ---
+$a_w$ &
+Settling speed coefficient (kriest\_8) &
+66 &
+m\,day$^{-1}$\,cm$^{-b_w}$ &
+\citet{kriest2002} &
+\conf{Power-law fit to in-situ Atlantic settling data (Eq.~8 of Kriest 2002). Coefficient and exponent chosen together; treat as a pair.} \\[4pt]
+
+$b_w$ &
+Settling speed exponent (kriest\_8) &
+0.62 &
+--- &
+\citet{kriest2002} &
+\conf{As above. Exponent is robust across datasets; coefficient varies by $\sim$factor 2 between cruises.} \\[4pt]
+
+% --- Fecal pellet sinking ---
+$\Delta\rho_{fp}$ &
+Fecal pellet excess density &
+0.15 &
+g\,cm$^{-3}$ &
+\citet{turner2002}; \citet{ploug2008} &
+\conf{Dense compact pellets ($\sim$150\,kg\,m$^{-3}$ above seawater). Gives $\sim$69\,m\,day$^{-1}$ at bin~8 via Stokes law, consistent with Turner (2002) review and Ploug et al.\ (2008) measurements.} \\[4pt]
+
+% --- Size grid ---
+$d_0$ &
+Monomer (unit particle) diameter &
+$20\times10^{-4}$ &
+cm &
+\citet{burd2009} &
+\conf{20\,\textmu m monomer, typical phytoplankton cell. Sets the size grid; changes shift all bin boundaries.} \\[4pt]
+
+% --- D_max ----
+$A_D$ &
+$D_\mathrm{max}$ amplitude in $D_\mathrm{max} = A_D \,\varepsilon^{-1/4}$ &
+$9.39\times10^{-6}$ &
+m$^{3/4}$\,W$^{-1/4}$ &
+\citet{burd2009} &
+\conf{From Kolmogorov turbulence theory. $D_\mathrm{max}$ sets the largest stable aggregate size per depth layer. Amplitude is better constrained than the exponent.} \\[4pt]
+
+\end{longtable}
+
+\clearpage
+
+% =============================================================
+% TABLE 2 — Kind of okay: fit second
+% =============================================================
+
+\begin{longtable}{L{2cm} L{5.5cm} C{3cm} L{3.5cm} L{5cm} L{6cm}}
+
+\caption{Group~2: parameters with reasonable literature estimates but site-dependent
+         values. Held at literature defaults in the first optimization pass; fit in
+         a second pass.}
+\label{tab:medium} \\
+
+\toprule
+\textbf{Symbol} &
+\textbf{Description} &
+\textbf{Value} &
+\textbf{Units} &
+\textbf{Reference} &
+\textbf{Basis / confidence} \\
+\midrule
+\endfirsthead
+
+\multicolumn{6}{l}{\small\textit{Table~\ref{tab:medium} continued\ldots}} \\[2pt]
+\toprule
+\textbf{Symbol} &
+\textbf{Description} &
+\textbf{Value} &
+\textbf{Units} &
+\textbf{Reference} &
+\textbf{Basis / confidence} \\
+\midrule
+\endhead
+
+\midrule
+\multicolumn{6}{r}{\small\textit{continued on next page}} \\
+\endfoot
+
+\bottomrule
+\endlastfoot
+
+% --- Fractal dimension ---
+$D_f$ &
+Particle fractal dimension &
+2.33 &
+--- &
+\citet{logan1990}; \citet{li1995} &
+\conf{Ocean aggregates: range 1.7--2.5 across studies. Value 2.33 is a mid-range choice consistent with marine snow measurements. Controls mass--size relationship and kernel collision cross-sections.} \\[4pt]
+
+% --- Interaction radius ---
+$r/r_g$ &
+Ratio of collision radius to radius of gyration &
+1.6 &
+--- &
+\citet{li1997} &
+\conf{Sets effective collision cross-section for shear and differential settling kernels. Li \& Logan (1997) derive this from fractal geometry; value varies $\sim$1.3--2.0.} \\[4pt]
+
+% --- Zoo: filter feeder ---
+$Z_c$ &
+Filter feeder (macrozooplankton) concentration &
+0.307 &
+ind\,m$^{-3}$ &
+\citet{stemmann2004a}; \citet{stemmann2004b} &
+\conf{Atlantic maximum from Stemmann et al.\ (2004) Table~2. Depth profile from Fig.~1 wired into \texttt{DepthProfile.typical()}. Needs EXPORTS net tow data (Amy / Debbie) for refinement.} \\[4pt]
+
+$c$ &
+Filter feeder clearance rate &
+0.025 &
+m$^{3}$\,ind$^{-1}$\,day$^{-1}$ &
+\citet{stemmann2004a} &
+\conf{From Stemmann et al.\ (2004). Order-of-magnitude known; exact value uncertain.} \\[4pt]
+
+% --- Zoo: flux feeder ---
+$Z_f$ &
+Flux feeder concentration &
+0.063 &
+ind\,m$^{-3}$ &
+\citet{stemmann2004a}; \citet{stemmann2004b} &
+\conf{Atlantic maximum from Stemmann et al.\ (2004) Table~2. Same depth profile logic as $Z_c$.} \\[4pt]
+
+$s$ &
+Flux feeder capture cross-section &
+$1.3\times10^{-5}$ &
+m$^{2}$\,ind$^{-1}$ &
+\citet{stemmann2004a} &
+\conf{Stemmann et al.\ (2004). Interpreted as the projected area presented by a sinking particle to a flux feeder.} \\[4pt]
+
+% --- Egestion fraction ---
+$p$ &
+Egestion fraction (fecal / ingested) &
+0.3--0.5 &
+--- &
+\citet{stemmann2004a} &
+\conf{Range reflects food quality and organism type. Default 0.5 (current). Controls fecal pellet production; linked to carbon budget closure.} \\[4pt]
+
+% --- Microbial ---
+$r_0$ &
+Microbial remineralization base rate &
+0.03 &
+day$^{-1}$ &
+\citet{iversen2013} &
+\conf{Iversen \& Ploug (2013) measured respiration on sinking diatom aggregates in a Norwegian fjord. Value represents warm surface conditions; deep column rates $\sim$10$\times$ lower after $Q_{10}$ scaling.} \\[4pt]
+
+$Q_{10}$ &
+Temperature sensitivity of microbial rate &
+2.0 &
+--- &
+\citet{iversen2013} &
+\conf{Standard marine bacteria value. Doubles the rate per 10\,\textdegree C increase. Widely used; uncertainty $\pm0.5$.} \\[4pt]
+
+% --- Mining ---
+$s_m$ &
+Micro-zooplankton mining capture cross-section &
+$1.3\times10^{-5}$ &
+m$^{2}$\,ind$^{-1}$ &
+\citet{stemmann2004a} &
+\conf{From Stemmann et al.\ (2004) Part I Eq.~25; same value as flux feeder cross-section.} \\[4pt]
+
+% --- Disagg redistribution ---
+$f_\mathrm{next}$ &
+Fraction of disaggregated biovolume sent to next smaller bin &
+2/3 &
+--- &
+\citet{burd2009} &
+\conf{Sectional model redistribution convention. Remainder spread uniformly across smaller bins. No direct measurement; value is a modeling assumption.} \\[4pt]
+
+\end{longtable}
+
+\clearpage
+
+% =============================================================
+% TABLE 3 — No idea: fit first
+% =============================================================
+
+\begin{longtable}{L{2cm} L{5.5cm} C{3cm} L{3.5cm} L{5cm} L{6cm}}
+
+\caption{Group~3: parameters with no reliable direct field estimate.
+         These are fit first against EXPORTS UVP particle size distributions
+         (North Atlantic station, surface to 500\,m).
+         Grid search over each parameter individually; conjugate gradient or
+         simulated annealing for joint optimization if needed.}
+\label{tab:unknown} \\
+
+\toprule
+\textbf{Symbol} &
+\textbf{Description} &
+\textbf{Current value} &
+\textbf{Units} &
+\textbf{Reference} &
+\textbf{Why unknown / fit range} \\
+\midrule
+\endfirsthead
+
+\multicolumn{6}{l}{\small\textit{Table~\ref{tab:unknown} continued\ldots}} \\[2pt]
+\toprule
+\textbf{Symbol} &
+\textbf{Description} &
+\textbf{Current value} &
+\textbf{Units} &
+\textbf{Reference} &
+\textbf{Why unknown / fit range} \\
+\midrule
+\endhead
+
+\midrule
+\multicolumn{6}{r}{\small\textit{continued on next page}} \\
+\endfoot
+
+\bottomrule
+\endlastfoot
+
+% --- Stickiness ---
+$\alpha$ &
+Collision efficiency (stickiness) of marine snow aggregates &
+1.0 &
+--- &
+\citet{jackson1990}; \citet{burd2009} &
+\conf{No direct measurement for natural marine particles. Jackson (1990) set $\alpha=1$ (upper bound). TEP-coated aggregates may have $\alpha \sim 0.01$--$1.0$; value depends on surface chemistry and particle type. \textbf{Fit first}: grid search $\alpha \in [0.1, 1.0]$, step 0.1.} \\[6pt]
+
+% --- Cross-coagulation stickiness ---
+$\alpha_\mathrm{cross}$ &
+Stickiness between fecal pellets and marine snow &
+0.5 &
+--- &
+--- &
+\conf{No field or lab measurement exists for fecal pellet -- marine snow collisions. Fecal pellets are compact ($D_f \approx 2.8$) and low in TEP, so assumed less sticky than aggregates. Current 0.5 is a conservative starting value. \textbf{Fit after} $\alpha$; range [0.1, 1.0].} \\[6pt]
+
+% --- Mining bite size ---
+$\delta m$ &
+Biovolume removed per encounter (micro-zooplankton mining) &
+$10^{-5}$ &
+cm$^{3}$ &
+\citet{stemmann2004a} &
+\conf{Proxy for gut volume of small copepods (\textit{Oncaea} spp.). Stemmann et al.\ (2004) Part I Eq.~25 gives the functional form but does not constrain $\delta m$ directly. Range $10^{-6}$ to $10^{-4}$\,cm$^{3}$. Needs EXPORTS gut-content data (Amy / Debbie). \textbf{Fit with} $\alpha_\mathrm{cross}$.} \\[6pt]
+
+% --- Miner concentration ---
+$Z_m$ &
+Micro-zooplankton miner concentration &
+250 &
+ind\,m$^{-3}$ &
+\citet{stemmann2004a} &
+\conf{Approximate value from Stemmann et al.\ (2004) Fig.~1. Depth profile $Z_m(z)$ is currently set uniform; needs EXPORTS net tow data to set the actual profile. Uncertainty large ($\times 2$--$5$).} \\[6pt]
+
+\end{longtable}
+
+\vspace{10pt}
+\noindent\textbf{Optimization note.}
+The loss function is
+$\mathcal{L} = \sum_{z,\,k} \bigl[\log_{10} N_\mathrm{model}(z,k) - \log_{10} N_\mathrm{obs}(z,k)\bigr]^{2}$,
+where $k$ indexes size bin and $z$ indexes depth layer.
+Log-space weighting ensures that small and large particles contribute equally.
+Observations: EXPORTS processed UVP particle size distributions, North Atlantic station.
+See \texttt{scripts/optimize/run\_alpha\_grid\_search.m} for the grid-search implementation
+and \texttt{scripts/optimize/loss\_size\_dist.m} for the loss function.
+
+\vspace{10pt}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

@@ -7,8 +7,9 @@
 %   3. Fecal sinking speed is faster than aggregate (16x+).
 %   4. Cross-coag reduces Y_fp and increases Y vs the off case.
 %   5. Microbial loss reduces total bv when enabled.
-%   6. Default config has enable_microbe=false (old runs unchanged).
-%   7. Transfer efficiency is in the right ballpark.
+%   6. Mining reduces total bv and produces fecal material.
+%   7. Default config has new optional losses off.
+%   8. Fecal production works.
 %
 % Short run (t=20 days) so this completes quickly.
 % For TE check, we use the ratio direction not the exact value.
@@ -143,18 +144,41 @@ report(sprintf('total bv lower with microbe on (%.3e < %.3e)', bv_mic, bv_base),
 if ok; pass=pass+1; else; fail=fail+1; end
 
 % -------------------------------------------------------
-% CHECK 6: default config has enable_microbe=false
+% CHECK 6: mining loss
 % -------------------------------------------------------
-fprintf('\n--- Check 6: default config safety ---\n');
-cfg_default = SimulationConfig();
-ok = ~cfg_default.enable_microbe;
-report('enable_microbe=false by default (old runs unchanged)', ok);
-if ok; pass=pass+1; else; fail=fail+1; end
+fprintf('\n--- Check 6: mining loss ---\n');
+cfg_mine = cfg.copy();
+cfg_mine.enable_mining = true;
+sim_mine = ColumnSimulation(cfg_mine, col_grid, profile);
+out_mine = sim_mine.run();
+
+bv_mine = sum(out_mine.concentrations(end,:,:), 'all') + ...
+          sum(out_mine.fecal_concentrations(end,:,:), 'all');
+fp_mine = sum(out_mine.fecal_concentrations(end,:,:), 'all');
+fp_base = sum(out.fecal_concentrations(end,:,:), 'all');
+ok_bv = bv_mine < bv_base;
+ok_fp = fp_mine > fp_base;
+report(sprintf('total bv lower with mining on (%.3e < %.3e)', bv_mine, bv_base), ok_bv);
+report(sprintf('Y_fp higher with mining on     (%.3e > %.3e)', fp_mine, fp_base), ok_fp);
+if ok_bv; pass=pass+1; else; fail=fail+1; end
+if ok_fp; pass=pass+1; else; fail=fail+1; end
 
 % -------------------------------------------------------
-% CHECK 7: Y_fp grows from zero (fecal production working)
+% CHECK 7: default config has optional losses off
 % -------------------------------------------------------
-fprintf('\n--- Check 7: fecal production ---\n');
+fprintf('\n--- Check 7: default config safety ---\n');
+cfg_default = SimulationConfig();
+ok_mic = ~cfg_default.enable_microbe;
+ok_min = ~cfg_default.enable_mining;
+report('enable_microbe=false by default (old runs unchanged)', ok_mic);
+report('enable_mining=false by default (old runs unchanged)', ok_min);
+if ok_mic; pass=pass+1; else; fail=fail+1; end
+if ok_min; pass=pass+1; else; fail=fail+1; end
+
+% -------------------------------------------------------
+% CHECK 8: Y_fp grows from zero (fecal production working)
+% -------------------------------------------------------
+fprintf('\n--- Check 8: fecal production ---\n');
 bv_fp_t0  = sum(Yfp(1,:,:),   'all');
 bv_fp_end = sum(Yfp(end,:,:), 'all');
 ok = bv_fp_end > bv_fp_t0;

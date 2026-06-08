@@ -27,3 +27,12 @@ output/tables/*
 !output/tables/.gitkeep
 output/logs/*
 !output/logs/.gitkeep
+
+# downloaded EXPORTS data (keep notes/tables, not raw files)
+data/NA/**/raw/
+data/NA/UVP_Data/export_raw/
+data/NP/
+*.sb
+*.cnv
+*.tgz
+*.tgz.sb

@@ -1,6 +1,6 @@
 % run_full_1d_integrated.m
-% Full 1-D run: coag + depth-scaled kernels + operator-split disagg
-% (depth-varying D_max) + Stemmann zoo depth profiles + fecal bin 8.
+% Full 1-D run: coag + depth-scaled kernels + disagg + zoo
+% + separate fecal pellets + cross-coag + mining.
 %
 % This is the first complete integrated run combining all physics.
 % Goal: check budget, depth profile, size spectrum, D_max(z).
@@ -17,9 +17,9 @@ z        = col_grid.z_centers;
 
 % --- config ---
 cfg = SimulationConfig( ...
-    'n_sections',        20, ...
+    'n_sections',        30, ...
     't_final',           365, ...
-    'delta_t',           1, ...
+    'delta_t',           0.4, ...
     'sinking_law',       'kriest_8', ...
     'ds_kernel_mode',    'sinking_law', ...
     'enable_coag',       true, ...
@@ -37,29 +37,40 @@ cfg = SimulationConfig( ...
     'zoo_c',             0.025, ...     % clearance rate, m^3 ind^-1 day^-1
     'zoo_s',             1.3e-5, ...    % capture cross-section, m^2 ind^-1
     'zoo_p',             0.5, ...
-    'zoo_ic',            7);            % fecal to bin 8 (~115 um)
+    'zoo_ic',            7, ...         % fecal to bin 8 (~115 um)
+    'fp_alpha_cross',    0.5, ...
+    'enable_mining',     true, ...
+    'mining_Zm',         250, ...
+    'mining_dm',         1e-5, ...
+    'mining_s',          1.3e-5);
 
 % --- run ---
 fprintf('Running full 1-D integrated model (t=365 days)...\n');
 sim = ColumnSimulation(cfg, col_grid, profile);
 out = sim.run();
 
-Yhist = out.concentrations;   % n_t x n_z x n_sec
+Yhist   = out.concentrations;         % n_t x n_z x n_sec
+Yfphist = out.fecal_concentrations;   % n_t x n_z x n_sec
 t_out = out.time;
 n_t   = length(t_out);
 n_z   = col_grid.n_z;
 
 % --- budget check ---
-bv_total = squeeze(sum(Yhist, [2 3]));      % total biovolume vs time
+bv_agg   = squeeze(sum(Yhist,   [2 3]));
+bv_fp    = squeeze(sum(Yfphist, [2 3]));
+bv_total = bv_agg + bv_fp;
 bv0      = bv_total(1);
+idx_day  = @(d) find(abs(t_out - d) == min(abs(t_out - d)), 1, 'first');
 
 fprintf('\n--- Budget ---\n');
 fprintf('  t=0     total bv = %.4e\n', bv_total(1));
-fprintf('  t=30    total bv = %.4e\n', bv_total(min(31,n_t)));
-fprintf('  t=90    total bv = %.4e\n', bv_total(min(91,n_t)));
-fprintf('  t=180   total bv = %.4e\n', bv_total(min(181,n_t)));
+fprintf('  t=30    total bv = %.4e\n', bv_total(idx_day(30)));
+fprintf('  t=90    total bv = %.4e\n', bv_total(idx_day(90)));
+fprintf('  t=180   total bv = %.4e\n', bv_total(idx_day(180)));
 fprintf('  t=365   total bv = %.4e\n', bv_total(end));
 fprintf('  Change t0->t365  = %.2f%%\n', 100*(bv_total(end)-bv0)/max(bv0,eps));
+fprintf('  Final aggregate bv = %.4e\n', bv_agg(end));
+fprintf('  Final fecal bv     = %.4e\n', bv_fp(end));
 
 % --- D_max profile (depth-varying) ---
 fprintf('\n--- D_max profile ---\n');
@@ -73,8 +84,10 @@ for k = 1:n_z
 end
 
 % --- largest populated bin at t=365 ---
-Yfinal = squeeze(Yhist(end, :, :));   % n_z x n_sec
-[~, max_bin] = max(Yfinal, [], 2);    % largest bin with most biovolume per layer
+Yfinal   = squeeze(Yhist(end, :, :));     % n_z x n_sec
+Yfpfinal = squeeze(Yfphist(end, :, :));   % n_z x n_sec
+Ytotal_final = Yfinal + Yfpfinal;
+[~, max_bin] = max(Ytotal_final, [], 2);  % peak bin per layer
 fprintf('\n--- Size spectrum at t=365 (peak bin per depth layer) ---\n');
 fprintf('  %-10s  %-10s\n', 'depth (m)', 'peak bin');
 for k = 1:n_z
@@ -82,8 +95,8 @@ for k = 1:n_z
 end
 
 % surface vs deep size spectrum
-bv_surf = Yfinal(1, :);
-bv_deep = Yfinal(end, :);
+bv_surf = Ytotal_final(1, :);
+bv_deep = Ytotal_final(end, :);
 fprintf('\n  Surface (z=%.0fm): max bin = %d\n', z(1),   find(bv_surf>0, 1, 'last'));
 fprintf('  Deep    (z=%.0fm): max bin = %d\n', z(end), find(bv_deep>0, 1, 'last'));
 
@@ -104,8 +117,8 @@ snap_days = [30, 90, 180, 365];
 colors    = {'b-', 'r-', 'm-', 'k-'};
 f2 = figure;
 for i = 1:length(snap_days)
-    ti = min(snap_days(i)+1, n_t);
-    bv_z = sum(squeeze(Yhist(ti,:,:)), 2);
+    ti = idx_day(snap_days(i));
+    bv_z = sum(squeeze(Yhist(ti,:,:)), 2) + sum(squeeze(Yfphist(ti,:,:)), 2);
     plot(bv_z, z, colors{i}, 'LineWidth', 1.2); hold on;
 end
 hold off;

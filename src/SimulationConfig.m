@@ -94,6 +94,15 @@ classdef SimulationConfig < matlab.mixin.Copyable
         microbe_gamma_size = 0.0;    % size exponent: r ~ d^(-gamma), 0 = size-independent
         microbe_dref_cm    = 0.01;   % reference diameter for size scaling [cm] (= 100 um)
 
+        % Micro-zooplankton mining (Stemmann 2004 Part I, Eq. 25)
+        % Small copepods (e.g. Oncaea) bite a fixed chunk dm from each particle.
+        % Particles shrink bin-by-bin; fecal fraction p goes to Y_fp.
+        enable_mining    = false;   % on/off
+        mining_Zm        = 250;     % miner concentration [ind m^-3] (Stemmann Fig 1)
+        mining_dm        = 1e-5;    % mass uptake per contact [cm^3] (gut volume)
+        mining_s         = 1.3e-5;  % cross-section area [m^2 ind^-1]
+        mining_min_bin   = 12;      % only mine bins >= this (~254 um, marine snow size)
+
         % Surface production (1-D only — applies to layer 1, bin surface_pp_bin)
         enable_surface_pp   = false;   % surface phytoplankton source on/off
         surface_pp_bin      = 1;       % which size bin gets the source
