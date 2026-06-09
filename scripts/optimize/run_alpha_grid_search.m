@@ -86,10 +86,13 @@ for i = 1:numel(uvp.d_um)
     [~, bin_map(i)] = min(abs(d_model - uvp.d_um(i)));
 end
 
-% sum UVP phi into model bins at each depth
+% sum aggregate-sized UVP phi into model bins at each depth
 n_ud = numel(uvp.depth_m);
 uvp_phi_bins = zeros(n_ud, n_sec);
 for i = 1:numel(uvp.d_um)
+    if uvp.d_um(i) >= 2000
+        continue;
+    end
     k = bin_map(i);
     vals = uvp.phi(:, i);
     vals(isnan(vals)) = 0;

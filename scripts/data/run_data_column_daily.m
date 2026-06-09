@@ -112,8 +112,9 @@ uvp = parse_uvp(uvp_file);
 
 % map UVP cruise-mean phi to model z grid
 % UVP depth bins -> interpolate to model z
-% use total phi summed over all size bins at each depth
-uvp_phi_clean = uvp.phi;
+% use aggregate-sized UVP only; larger objects are mostly zooplankton
+mask_agg = uvp.d_um < 2000;
+uvp_phi_clean = uvp.phi(:, mask_agg);
 uvp_phi_clean(isnan(uvp_phi_clean)) = 0;
 uvp_phi_total = sum(uvp_phi_clean, 2);   % n_uvp_depths x 1
 
@@ -134,7 +135,7 @@ if ~exist(fig_dir, 'dir'), mkdir(fig_dir); end
 figure;
 semilogy(model_phi_mean,    col_grid.z_centers, 'b-',  'DisplayName', 'model (daily forced)');
 hold on;
-semilogy(uvp_phi_model,     col_grid.z_centers, 'r--', 'DisplayName', 'UVP observed');
+semilogy(uvp_phi_model,     col_grid.z_centers, 'r--', 'DisplayName', 'UVP <2000 um');
 set(gca, 'YDir', 'reverse');
 xlabel('\phi_{total}  [cm^3 cm^{-3}]');
 ylabel('depth  [m]');
