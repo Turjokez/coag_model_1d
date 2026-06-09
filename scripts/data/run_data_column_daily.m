@@ -158,6 +158,37 @@ legend;
 title('surface phi: forcing vs model');
 saveas(gcf, fullfile(fig_dir, 'data_daily_surface_time.png'));
 
+% Figure 3: time-depth of model total phi (log10 scale)
+% Shows how the column evolves over the cruise.
+model_phi_log = log10(max(model_phi_total, 1e-12));   % n_days x n_z
+figure;
+imagesc(daily.day_num, col_grid.z_centers, model_phi_log');
+set(gca, 'YDir', 'reverse');
+xlabel('cruise day');
+ylabel('depth  [m]');
+colorbar;
+title('model \phi (log_{10} cm^3 cm^{-3})');
+saveas(gcf, fullfile(fig_dir, 'data_daily_timedepth.png'));
+
+% Figure 4: selected-day profiles vs UVP cruise mean
+% Pick early, middle, and late in the cruise.
+sel_idx = round([1, n_days/2, n_days]);
+sel_styles = {'b-', 'g-', 'r-'};
+figure;
+for k = 1:3
+    id = sel_idx(k);
+    semilogy(model_phi_total(id,:)', col_grid.z_centers, sel_styles{k}, ...
+        'DisplayName', sprintf('model day %d', daily.day_num(id)));
+    hold on;
+end
+semilogy(uvp_phi_model, col_grid.z_centers, 'k--', 'DisplayName', 'UVP mean <2000 \mum');
+set(gca, 'YDir', 'reverse');
+xlabel('\phi  [cm^3 cm^{-3}]');
+ylabel('depth  [m]');
+legend('location', 'southeast');
+title('model: day 1 / mid / end vs UVP mean');
+saveas(gcf, fullfile(fig_dir, 'data_daily_profiles_selected.png'));
+
 % --- summary ---
 fprintf('\n--- Summary ---\n');
 fprintf('UVP surface phi (mean):   %.3e cm^3/cm^3\n', mean(sum(daily.phi, 2)));
