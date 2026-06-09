@@ -30,8 +30,13 @@ base_cfg.surface_pp_mu  = 0.1;
 base_cfg.r_to_rg        = 1.6;
 base_cfg.fp_alpha_cross = 0.5;
 base_cfg.zoo_Zc         = 0.307;
+base_cfg.zoo_c          = 0.025;    % Stemmann 2004
 base_cfg.zoo_Zf         = 0.063;
+base_cfg.zoo_s          = 1.3e-5;   % Stemmann 2004
+base_cfg.zoo_p          = 0.5;      % Stemmann 2004
 base_cfg.zoo_ic         = 7;
+base_cfg.mining_s       = 1.3e-5;
+base_cfg.validate();
 
 dt            = 0.25;          % day
 steps_per_day = round(1/dt);
@@ -133,14 +138,14 @@ if ~exist(fig_dir, 'dir'), mkdir(fig_dir); end
 
 % loss surface
 figure;
-imagesc(log10(r0_vals + 1e-10), alpha_vals, loss_grid);
+imagesc(log10(r0_vals + 1e-10), alpha_vals, log10(loss_grid));
 colorbar;
 hold on;
 plot(log10(r0_best + 1e-10), alpha_best, 'r+', 'MarkerSize', 12, 'LineWidth', 2);
 hold off;
 xlabel('log_{10}(microbe\_r0)');
 ylabel('\alpha');
-title('loss: \alpha x r_0');
+title('log_{10} loss: \alpha x r_0');
 saveas(gcf, fullfile(fig_dir, 'opt_2d_loss_surface.png'));
 
 % best-fit profile: run to convergence
