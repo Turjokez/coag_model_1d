@@ -56,6 +56,7 @@ classdef SimulationConfig < matlab.mixin.Copyable
         disagg_gamma = 0.15;        % exponent for D_max scaling
         disagg_epsilon = [];        % turbulence dissipation rate (scalar or function handle)
         disagg_dmax_cm = [];        % optional override for D_max in cm
+        disagg_dmax_A  = [];        % Parker calibration constant [m]; default 9.39e-6
         
         % Parameters for solving equations
         t_init = 0.0;          % Initial time for integrations [d]
@@ -160,8 +161,8 @@ classdef SimulationConfig < matlab.mixin.Copyable
             end
             if isprop(obj,'disagg_mode') && ~isempty(obj.disagg_mode)
                 mode = lower(string(obj.disagg_mode));
-                valid_modes = ["legacy","operator_split"];
-                assert(any(mode == valid_modes), 'disagg_mode must be legacy or operator_split');
+                valid_modes = ["legacy","operator_split","logistic"];
+                assert(any(mode == valid_modes), 'disagg_mode must be legacy, operator_split, or logistic');
             end
             if isprop(obj,'disagg_outer_dt') && ~isempty(obj.disagg_outer_dt)
                 assert(isfinite(obj.disagg_outer_dt) && obj.disagg_outer_dt > 0, 'disagg_outer_dt must be > 0');

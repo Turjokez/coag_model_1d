@@ -41,8 +41,10 @@ rho_data  = rho_data * 1e-3;
 % eps: m^2/s^3 -> cm^2/s^3
 eps_data  = eps_data * 1e4;
 
-% floor: avoid zero eps -> infinite D_max
-eps_floor = 1e-8;   % cm^2/s^3
+% floor: set minimum eps to realistic deep-ocean background
+% open-ocean below mixed layer: ~1e-8 W/kg = 1e-4 cm^2/s^3
+% avoids the VMP noise floor (1e-12 m^2/s^3) giving unrealistically huge D_max
+eps_floor = 1e-4;   % cm^2/s^3
 eps_data  = max(eps_data, eps_floor);
 
 % kinematic viscosity from temperature (Sharqawy 2010 approximation)

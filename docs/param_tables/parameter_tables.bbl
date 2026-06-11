@@ -1,0 +1,114 @@
+\begin{thebibliography}{13}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Burd and Jackson(2009)]{burd2009}
+Adrian~B. Burd and George~A. Jackson.
+\newblock Particle aggregation.
+\newblock \emph{Annual Review of Marine Science}, 1:\penalty0 65--90, 2009.
+\newblock \doi{10.1146/annurev.marine.010908.163904}.
+
+\bibitem[Iversen and Ploug(2013)]{iversen2013}
+Morten~H. Iversen and Helle Ploug.
+\newblock Temperature effects on carbon-specific respiration rate and sinking
+  velocity of diatom aggregates -- potential implications for deep ocean export
+  processes.
+\newblock \emph{Biogeosciences}, 10\penalty0 (6):\penalty0 4073--4085, 2013.
+\newblock \doi{10.5194/bg-10-4073-2013}.
+
+\bibitem[Jackson(1990)]{jackson1990}
+George~A. Jackson.
+\newblock A model of the formation of marine algal flocs by physical
+  coagulation processes.
+\newblock \emph{Deep-Sea Research Part A}, 37\penalty0 (8):\penalty0
+  1197--1211, 1990.
+\newblock \doi{10.1016/0198-0149(90)90038-W}.
+
+\bibitem[Kriest(2002)]{kriest2002}
+Iris Kriest.
+\newblock Different parameterizations of marine snow in a 1{D}-model and their
+  influence on representation of marine snow, nitrogen budget and
+  sedimentation.
+\newblock \emph{Deep-Sea Research Part I}, 49\penalty0 (12):\penalty0
+  2133--2162, 2002.
+\newblock \doi{10.1016/S0967-0637(02)00127-9}.
+
+\bibitem[Li and Logan(1995)]{li1995}
+Xiao-yan Li and Bruce~E. Logan.
+\newblock Collision frequencies of fractal aggregates with small particles by
+  differential sedimentation.
+\newblock \emph{Environmental Science \& Technology}, 29\penalty0
+  (12):\penalty0 3060--3067, 1995.
+\newblock \doi{10.1021/es00012a022}.
+
+\bibitem[Li and Logan(1997)]{li1997}
+Xiao-yan Li and Bruce~E. Logan.
+\newblock Collision frequencies between fractal aggregates and small particles
+  in a turbulently sheared fluid.
+\newblock \emph{Environmental Science \& Technology}, 31\penalty0 (4):\penalty0
+  1237--1242, 1997.
+\newblock \doi{10.1021/es960772o}.
+
+\bibitem[Logan and Wilkinson(1990)]{logan1990}
+Bruce~E. Logan and David~B. Wilkinson.
+\newblock Fractal geometry of marine snow and other biological aggregates.
+\newblock \emph{Limnology and Oceanography}, 35\penalty0 (1):\penalty0
+  130--136, 1990.
+\newblock \doi{10.4319/lo.1990.35.1.0130}.
+
+\bibitem[Millero and Poisson(1981)]{millero1981}
+Frank~J. Millero and Alain Poisson.
+\newblock International one-atmosphere equation of state of seawater.
+\newblock \emph{Deep-Sea Research Part A}, 28\penalty0 (6):\penalty0 625--629,
+  1981.
+\newblock \doi{10.1016/0198-0149(81)90122-9}.
+
+\bibitem[Ploug et~al.(2008)Ploug, Iversen, and Fischer]{ploug2008}
+Helle Ploug, Morten~H. Iversen, and Gerhard Fischer.
+\newblock Ballast, sinking velocity, and apparent diffusivity within marine
+  snow and zooplankton fecal pellets: implications for substrate turnover by
+  attached bacteria.
+\newblock \emph{Limnology and Oceanography}, 53\penalty0 (5):\penalty0
+  1878--1886, 2008.
+\newblock \doi{10.4319/lo.2008.53.5.1878}.
+
+\bibitem[Sharqawy et~al.(2010)Sharqawy, Lienhard, and Zubair]{sharqawy2010}
+Mostafa~H. Sharqawy, John~H. Lienhard, and Syed~M. Zubair.
+\newblock Thermophysical properties of seawater: a review of existing
+  correlations and data.
+\newblock \emph{Desalination and Water Treatment}, 16\penalty0 (1--3):\penalty0
+  354--380, 2010.
+\newblock \doi{10.5004/dwt.2010.1079}.
+
+\bibitem[Stemmann et~al.(2004{\natexlab{a}})Stemmann, Jackson, and
+  Gorsky]{stemmann2004a}
+Lars Stemmann, George~A. Jackson, and Gabriel Gorsky.
+\newblock A vertical model of particle size distributions and fluxes in the
+  midwater column that includes biological and physical processes. {Part I}:
+  Model formulation.
+\newblock \emph{Deep-Sea Research Part I}, 51\penalty0 (7):\penalty0 865--884,
+  2004{\natexlab{a}}.
+\newblock \doi{10.1016/j.dsr.2004.03.001}.
+
+\bibitem[Stemmann et~al.(2004{\natexlab{b}})Stemmann, Jackson, and
+  Ianson]{stemmann2004b}
+Lars Stemmann, George~A. Jackson, and Debby Ianson.
+\newblock A vertical model of particle size distributions and fluxes in the
+  midwater column that includes biological and physical processes. {Part II}:
+  Model testing, optimization and sensitivity.
+\newblock \emph{Deep-Sea Research Part I}, 51\penalty0 (7):\penalty0 885--908,
+  2004{\natexlab{b}}.
+\newblock \doi{10.1016/j.dsr.2004.03.002}.
+
+\bibitem[Turner(2002)]{turner2002}
+Jefferson~T. Turner.
+\newblock Zooplankton fecal pellets, marine snow and sinking phytoplankton
+  blooms.
+\newblock \emph{Aquatic Microbial Ecology}, 27\penalty0 (1):\penalty0 57--102,
+  2002.
+\newblock \doi{10.3354/ame027057}.
+
+\end{thebibliography}

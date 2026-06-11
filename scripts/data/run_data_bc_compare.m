@@ -46,7 +46,7 @@ daily = get_daily_surface_phi(uvp_file, cfg, col_grid);
 uvp   = parse_uvp(uvp_file);
 
 % UVP cruise-mean aggregate phi on model depths
-mask_agg = uvp.d_um < 2000;
+mask_agg = uvp.d_um >= 100 & uvp.d_um < 2000;
 uvp_phi = uvp.phi(:, mask_agg);
 uvp_phi(isnan(uvp_phi)) = 0;
 uvp_total = sum(uvp_phi, 2);

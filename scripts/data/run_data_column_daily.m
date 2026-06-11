@@ -1,16 +1,16 @@
 % run_data_column_daily.m
 %
-% First real data-driven 1-D column run.
+% Data-driven 1-D column run with spinup.
 %
 % Surface forcing: UVP phi from top 5 m, reset each day.
 % Physics: real eps(z), T(z), S(z) from keps_for_dave.mat.
-% Compare: model phi(z) vs UVP cruise-mean phi(z) at end.
 %
 % Steps:
 %   1. Build DepthProfile from keps data
 %   2. Build daily surface phi from UVP
-%   3. Run ColumnSimulation with daily surface reset
-%   4. Plot: model depth profile vs UVP observed
+%   3. Spinup: repeat 26-day forcing until depth-mean phi converges (<1%)
+%   4. Comparison run: one more 26-day pass from spun-up state
+%   5. Plot: model depth profile vs UVP observed
 
 script_dir = fileparts(mfilename('fullpath'));
 addpath(script_dir);
@@ -33,7 +33,8 @@ cfg.enable_disagg   = true;
 cfg.enable_zoo      = true;
 cfg.enable_microbe  = true;
 cfg.enable_mining   = true;
-cfg.microbe_r0      = 0.001;
+cfg.alpha           = 0.5;     % best-fit from 2D grid search
+cfg.microbe_r0      = 0.03;    % best-fit from r0 scan (run_r0_scan.m)
 cfg.surface_pp_mu   = 0.1;
 cfg.r_to_rg         = 1.6;
 cfg.zoo_c           = 0.025;    % Stemmann 2004
@@ -75,31 +76,61 @@ if cfl > 0.9
     warning('CFL = %.3f > 0.9. Reduce dt.', cfl);
 end
 
-% --- time loop ---
+% --- spinup: repeat 26-day forcing until column reaches steady state ---
 n_z   = col_grid.n_z;
 n_sec = cfg.n_sections;
 
-% start from first day's surface phi, zeros below
+% start from zeros
 Y   = zeros(n_z, n_sec);
 Yfp = zeros(n_z, n_sec);
-Y(1, :) = daily.phi(1, :);
 
+spinup_tol   = 0.01;   % converge when depth-mean phi changes < 1%
+max_cycles   = 50;
+conv_cycle   = nan;
+
+fprintf('Spinup: repeating %d-day forcing until depth-mean phi < %.0f%% change...\n', ...
+    n_days, spinup_tol*100);
+t_start = tic;
+
+for icyc = 1:max_cycles
+    phi_before = mean(sum(Y + Yfp, 3), 2);   % depth profile before this cycle
+
+    for i_day = 1:n_days
+        for i_step = 1:steps_per_day
+            Y(1, :) = daily.phi(i_day, :);
+            [Y, Yfp] = sim.rhs.stepY(Y, dt, Yfp);
+            Y(1, :) = daily.phi(i_day, :);
+        end
+    end
+
+    phi_after = mean(sum(Y + Yfp, 3), 2);
+    rel_change = max(abs(phi_after - phi_before) ./ max(phi_before, 1e-20));
+    fprintf('  cycle %2d: max rel change = %.4f\n', icyc, rel_change);
+
+    if rel_change < spinup_tol
+        conv_cycle = icyc;
+        fprintf('  converged at cycle %d.\n', icyc);
+        break;
+    end
+end
+
+if isnan(conv_cycle)
+    fprintf('  warning: spinup did not converge in %d cycles.\n', max_cycles);
+end
+
+% --- comparison run from spun-up state ---
 % storage: save every day
 Y_daily   = zeros(n_days, n_z, n_sec);
 Yfp_daily = zeros(n_days, n_z, n_sec);
 
-fprintf('Running %d days...\n', n_days);
-t_start = tic;
+fprintf('Comparison run: %d days from spun-up state...\n', n_days);
 
 for i_day = 1:n_days
-    % step forward one day, holding surface as Dirichlet BC each substep
     for i_step = 1:steps_per_day
-        Y(1, :) = daily.phi(i_day, :);   % true boundary condition
+        Y(1, :) = daily.phi(i_day, :);
         [Y, Yfp] = sim.rhs.stepY(Y, dt, Yfp);
-        Y(1, :) = daily.phi(i_day, :);   % keep surface fixed after transport
+        Y(1, :) = daily.phi(i_day, :);
     end
-
-    % store end-of-day state
     Y_daily(i_day, :, :)   = Y;
     Yfp_daily(i_day, :, :) = Yfp;
 end
@@ -113,7 +144,7 @@ uvp = parse_uvp(uvp_file);
 % map UVP cruise-mean phi to model z grid
 % UVP depth bins -> interpolate to model z
 % use aggregate-sized UVP only; larger objects are mostly zooplankton
-mask_agg = uvp.d_um < 2000;
+mask_agg = uvp.d_um >= 100 & uvp.d_um < 2000;
 uvp_phi_clean = uvp.phi(:, mask_agg);
 uvp_phi_clean(isnan(uvp_phi_clean)) = 0;
 uvp_phi_total = sum(uvp_phi_clean, 2);   % n_uvp_depths x 1
@@ -132,10 +163,11 @@ fig_dir = fullfile(script_dir, '..', '..', 'docs', 'figures');
 if ~exist(fig_dir, 'dir'), mkdir(fig_dir); end
 
 % Figure 1: model vs UVP depth profile (cruise mean)
+% semilogx = log phi on x-axis, linear depth on y-axis
 figure;
-semilogy(model_phi_mean,    col_grid.z_centers, 'b-',  'DisplayName', 'model (daily forced)');
+semilogx(model_phi_mean,    col_grid.z_centers, 'b-',  'DisplayName', 'model (daily forced)');
 hold on;
-semilogy(uvp_phi_model,     col_grid.z_centers, 'r--', 'DisplayName', 'UVP <2000 um');
+semilogx(uvp_phi_model,     col_grid.z_centers, 'r--', 'DisplayName', 'UVP <2000 um');
 set(gca, 'YDir', 'reverse');
 xlabel('\phi_{total}  [cm^3 cm^{-3}]');
 ylabel('depth  [m]');
@@ -177,11 +209,11 @@ sel_styles = {'b-', 'g-', 'r-'};
 figure;
 for k = 1:3
     id = sel_idx(k);
-    semilogy(model_phi_total(id,:)', col_grid.z_centers, sel_styles{k}, ...
+    semilogx(model_phi_total(id,:)', col_grid.z_centers, sel_styles{k}, ...
         'DisplayName', sprintf('model day %d', daily.day_num(id)));
     hold on;
 end
-semilogy(uvp_phi_model, col_grid.z_centers, 'k--', 'DisplayName', 'UVP mean <2000 \mum');
+semilogx(uvp_phi_model, col_grid.z_centers, 'k--', 'DisplayName', 'UVP mean <2000 \mum');
 set(gca, 'YDir', 'reverse');
 xlabel('\phi  [cm^3 cm^{-3}]');
 ylabel('depth  [m]');
@@ -193,8 +225,10 @@ saveas(gcf, fullfile(fig_dir, 'data_daily_profiles_selected.png'));
 fprintf('\n--- Summary ---\n');
 fprintf('UVP surface phi (mean):   %.3e cm^3/cm^3\n', mean(sum(daily.phi, 2)));
 fprintf('Model surface phi (mean): %.3e cm^3/cm^3\n', mean(model_surf_total));
-[~, iz200] = min(abs(col_grid.z_centers - 200));
-fprintf('Model %.0f m phi (mean):   %.3e cm^3/cm^3\n', ...
-    col_grid.z_centers(iz200), model_phi_mean(iz200));
-fprintf('UVP   %.0f m phi (mean):   %.3e cm^3/cm^3\n', ...
-    col_grid.z_centers(iz200), uvp_phi_model(iz200));
+check_depths = [25, 75, 175, 300, 500, 975];
+for zd = check_depths
+    [~, iz] = min(abs(col_grid.z_centers - zd));
+    ratio = model_phi_mean(iz) / max(uvp_phi_model(iz), 1e-20);
+    fprintf('  z=%4.0f m  model=%.2e  UVP=%.2e  ratio=%.2f\n', ...
+        col_grid.z_centers(iz), model_phi_mean(iz), uvp_phi_model(iz), ratio);
+end

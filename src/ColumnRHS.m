@@ -61,9 +61,17 @@ classdef ColumnRHS < handle
             % if operator-split disagg is selected, disable legacy disagg
             % inside CoagulationRHS — same fix as CoagulationSimulation does.
             % Without this, both legacy (c3=0.02) and operator-split run together.
+            % disable legacy disagg in CoagulationRHS whenever operator-split
+            % or logistic mode is active — both handle disagg externally
             if isprop(cfg,'enable_disagg') && cfg.enable_disagg && ...
-               isprop(cfg,'disagg_mode')   && strcmpi(cfg.disagg_mode,'operator_split')
+               isprop(cfg,'disagg_mode')   && ...
+               (strcmpi(cfg.disagg_mode,'operator_split') || strcmpi(cfg.disagg_mode,'logistic'))
                 obj.cfg.enable_disagg = false;
+            end
+
+            % override Dmax_A if cfg provides one
+            if isprop(cfg,'disagg_dmax_A') && ~isempty(cfg.disagg_dmax_A)
+                obj.Dmax_A = cfg.disagg_dmax_A;
             end
 
             % build beta component matrices (used for per-depth scaling)
@@ -335,30 +343,51 @@ classdef ColumnRHS < handle
         function ok = useOperatorSplitDisagg(obj)
             ok = isprop(obj.cfg_orig,'enable_disagg') && obj.cfg_orig.enable_disagg ...
               && isprop(obj.cfg_orig,'disagg_mode') ...
-              && strcmpi(obj.cfg_orig.disagg_mode, 'operator_split');
+              && (strcmpi(obj.cfg_orig.disagg_mode, 'operator_split') ...
+                  || strcmpi(obj.cfg_orig.disagg_mode, 'logistic'));
         end
 
         function Y = applyDisaggSplit(obj, Y)
-            % Operator_split disagg applied independently at each depth layer.
+            % Disagg applied independently at each depth layer.
+            % disagg_mode = 'operator_split' : hard D_max cutoff (Dmax_A * eps^-1/4)
+            % disagg_mode = 'logistic'        : smooth logistic cutoff (Alldredge-style)
+            use_logistic = isprop(obj.cfg_orig,'disagg_mode') ...
+                        && strcmpi(obj.cfg_orig.disagg_mode, 'logistic');
             n_z = obj.col_grid.n_z;
             for k = 1:n_z
-                v_k    = Y(k, :)';
-                cfg_k = obj.cfg_orig;
+                v_k = Y(k, :)';
 
-                % Depth-varying D_max from eps(k) when available.
-                if ~isempty(obj.profile) && isprop(obj.profile, 'eps') ...
-                        && numel(obj.profile.eps) >= k ...
-                        && isfinite(obj.profile.eps(k)) && obj.profile.eps(k) > 0
-                    eps_cm = obj.profile.eps(k);        % cm^2/s^3
-                    eps_m  = eps_cm / 1e4;              % m^2/s^3
-                    dmax_m = obj.Dmax_A * eps_m^(-1/4); % high eps -> small D_max
-                    dmax_cm = 100 * dmax_m;
-
-                    cfg_k = obj.cfg_orig.copy();
-                    cfg_k.disagg_dmax_cm = dmax_cm;
+                % get eps at this layer (DepthProfile is a value class; access directly)
+                eps_k = [];
+                if ~isempty(obj.profile) && numel(obj.profile.eps) >= k
+                    e = obj.profile.eps(k);
+                    if isfinite(e) && e > 0
+                        eps_k = e;   % cm^2/s^3
+                    end
                 end
 
-                Y(k,:) = DisaggregationOperatorSplit.apply(v_k, obj.size_grid, cfg_k)';
+                if use_logistic
+                    % logistic smooth cutoff: DisaggregationLogistic.apply
+                    % formula uses r_max = C0 * eps^(-B), calibrated in cm^2/s^3
+                    if isempty(eps_k)
+                        eps_k = 1e-3;   % fallback: typical open-ocean cm^2/s^3
+                    end
+                    % p=0: uniform redistribution (broken mass spreads evenly
+                    % across smaller bins, not piled at bin 1 as with p=2.5)
+                    Y(k,:) = DisaggregationLogistic.apply(v_k, obj.size_grid, eps_k, ...
+                                  struct('kappa',3.5,'C0',2e-3,'B',0.45,'p',0))';
+                else
+                    % operator_split: hard D_max cutoff
+                    cfg_k = obj.cfg_orig;
+                    if ~isempty(eps_k)
+                        eps_m   = eps_k / 1e4;               % cm^2/s^3 -> m^2/s^3
+                        dmax_m  = obj.Dmax_A * eps_m^(-1/4);
+                        dmax_cm = 100 * dmax_m;
+                        cfg_k = obj.cfg_orig.copy();
+                        cfg_k.disagg_dmax_cm = dmax_cm;
+                    end
+                    Y(k,:) = DisaggregationOperatorSplit.apply(v_k, obj.size_grid, cfg_k)';
+                end
             end
         end
     end
