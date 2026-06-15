@@ -383,6 +383,10 @@ classdef ColumnRHS < handle
                         eps_m   = eps_k / 1e4;               % cm^2/s^3 -> m^2/s^3
                         dmax_m  = obj.Dmax_A * eps_m^(-1/4);
                         dmax_cm = 100 * dmax_m;
+                        % apply optional hard cap (disagg_dmax_cap_cm)
+                        if isprop(obj.cfg_orig,'disagg_dmax_cap_cm') && isfinite(obj.cfg_orig.disagg_dmax_cap_cm)
+                            dmax_cm = min(dmax_cm, obj.cfg_orig.disagg_dmax_cap_cm);
+                        end
                         cfg_k = obj.cfg_orig.copy();
                         cfg_k.disagg_dmax_cm = dmax_cm;
                     end

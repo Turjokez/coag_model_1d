@@ -57,6 +57,7 @@ classdef SimulationConfig < matlab.mixin.Copyable
         disagg_epsilon = [];        % turbulence dissipation rate (scalar or function handle)
         disagg_dmax_cm = [];        % optional override for D_max in cm
         disagg_dmax_A  = [];        % Parker calibration constant [m]; default 9.39e-6
+        disagg_dmax_cap_cm = Inf;   % hard upper cap on D_max [cm]; Inf = no cap (default)
         
         % Parameters for solving equations
         t_init = 0.0;          % Initial time for integrations [d]

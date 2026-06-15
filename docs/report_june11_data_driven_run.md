@@ -68,3 +68,15 @@ The deep signal (200--400 m) with x5 also looks slightly too strong. The correct
 -  whether to simply increase $D_a$, or to reconsider the $\varepsilon^{-1/4}$ scaling in equation (3). The exponent $-1/4$ comes from Parker et al. (1972) for inorganic flocs in shear flow. I'm not sure that it applies to marine snow aggregates in stratified ocean turbulence.
 
 Once the $D_a$ direction is settled, the α × r₀ grid search needs to be rerun. The previous grid search assumed the default $D_a$ and is no longer valid.
+
+---
+
+## 5. Mass Budget Check
+
+Before the 100 m start test, I ran a mass budget diagnostic with the full surface-forced run (best cast day: 20210522). The model was compared at each depth against UVP using three quantities: all 30 model bins, model restricted to the UVP size range (100--2000 µm), and UVP measured phi.
+
+The comparison showed that the ratio model-UVP-range / UVP is 0.48--0.84 in the top 75 m (model too low), 1.5--3.1× in the 125--275 m layer (the subsurface peak artifact), and near zero below 375 m. The mean fraction of model mass sitting in bins below 100 µm was only 3.9%, so small-bin pileup is not the cause of the mismatch.
+
+Note that the subsurface peak (known from earlier runs) is a Dirichlet BC artifact: large particles sink quickly past the surface layer, accumulating just below. I think this artifact is the source of the 1.5--3.1× overestimate in the 125--275 m band, not real overproduction by the physics.
+
+The 100 m start run and loss term analysis continue in `report_june12_loss_toggle.md`.
