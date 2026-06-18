@@ -110,6 +110,23 @@ classdef SimulationConfig < matlab.mixin.Copyable
         surface_pp_bin      = 1;       % which size bin gets the source
         surface_pp_rate     = 1e-8;    % constant source strength [bv day^-1]
         surface_pp_mu       = 0;       % growth rate [day^-1]; if > 0, uses mu*phi mode instead
+
+        % DVM fecal rerouting -- commented out June 16 2026
+        % All test variants returned null (no change in deep ratio at 475 m).
+        % Archibald 2019 rerouting, gut-memory (G_gut), and Bianchi-lite (G_gut + B_mig)
+        % all tested. Params preserved for reference if Adrian asks to revisit.
+        % enable_dvm      = false;
+        % dvm_p           = 0.5;    % fraction of grazers that migrate [0-1]
+        % dvm_ffec        = 0.7;    % fraction of migrator fecal in feeding zone [0-1]
+        % dvm_feed_zmax   = 150;    % bottom of feeding zone [m]
+        % dvm_zmin        = 300;    % top of deep injection band [m]
+        % dvm_zmax        = 500;    % bottom of deep injection band [m]
+        % dvm_tau_gut     = 0.25;   % gut clearance time [day]
+        % enable_dvm_bianchi = false;
+        % dvm_tau_body       = 1.0;
+        % dvm_body_frac      = 0.3;
+        % dvm_mort_rate      = 0.02;
+        % dvm_mort_bin       = 15;
     end
     
     methods

@@ -44,6 +44,8 @@ classdef ColumnRHS < handle
 
         zoo        % ZooplanktonGrazing object (empty if disabled)
         cross_coag % FecalCrossCoag object (empty if disabled)
+        % G_gut = 0  % DVM gut pool -- commented out June 16 2026
+        % B_mig = 0  % DVM body pool -- commented out June 16 2026
     end
 
     methods
@@ -207,6 +209,14 @@ classdef ColumnRHS < handle
                 n_sec      = obj.cfg_orig.n_sections;
                 target_bin = max(1, min(n_sec, round(obj.zoo.ic) + 1));
 
+                % DVM params commented out June 16 2026 (all test variants null)
+                % dvm_bin    = max(1, min(n_sec, round(obj.zoo.ic) + 5));
+                % dvm_on     = isprop(obj.cfg_orig, 'enable_dvm')         && obj.cfg_orig.enable_dvm;
+                % bianchi_on = isprop(obj.cfg_orig, 'enable_dvm_bianchi') && obj.cfg_orig.enable_dvm_bianchi;
+                % if dvm_on || bianchi_on, z_centers = ((1:n_z) - 0.5)' * obj.col_grid.dz; end
+                % if dvm_on, frac_deep = obj.cfg_orig.dvm_p * (1 - obj.cfg_orig.dvm_ffec); end
+                % if bianchi_on, frac_mig = obj.cfg_orig.dvm_p; end
+
                 for k = 1:n_z
                     v_k   = Y_new(k, :)';
                     w_cms = obj.w_z(k, :)' .* (100 / day_to_sec);
@@ -218,12 +228,55 @@ classdef ColumnRHS < handle
                         [dvdt, fp_flux] = obj.zoo.graze(v_k, w_cms);
                     end
 
-                    % update aggregate array (losses only, no fecal return here)
+                    % update aggregate array (losses only)
                     Y_new(k, :) = max(v_k + dt .* dvdt, 0)';
 
-                    % add fecal production to fecal pellet array at this depth
-                    Yfp_new(k, target_bin) = max(0, Yfp_new(k, target_bin) + dt * fp_flux);
+                    % DVM feeding-zone routing commented out June 16 2026
+                    % if dvm_on && z_centers(k) <= obj.cfg_orig.dvm_feed_zmax
+                    %     local_fp  = fp_flux * (1 - frac_deep);
+                    %     obj.G_gut = obj.G_gut + fp_flux * frac_deep * dt;
+                    % elseif bianchi_on && z_centers(k) <= obj.cfg_orig.dvm_feed_zmax
+                    %     migrant_fp = fp_flux * frac_mig;
+                    %     local_fp   = fp_flux - migrant_fp;
+                    %     gut_add    = migrant_fp * (1 - obj.cfg_orig.dvm_body_frac);
+                    %     body_add   = migrant_fp * obj.cfg_orig.dvm_body_frac;
+                    %     obj.G_gut  = obj.G_gut + gut_add * dt;
+                    %     obj.B_mig  = obj.B_mig + body_add * dt;
+                    % else
+                    %     local_fp = fp_flux;
+                    % end
+                    local_fp = fp_flux;
+
+                    % add local fecal to Y_fp at this depth
+                    Yfp_new(k, target_bin) = max(0, Yfp_new(k, target_bin) + dt * local_fp);
                 end
+
+                % G_gut and B_mig release blocks commented out June 16 2026
+                % if (dvm_on || bianchi_on) && obj.G_gut > 0
+                %     kG      = 1 / obj.cfg_orig.dvm_tau_gut;
+                %     release = obj.G_gut * (1 - exp(-kG * dt));
+                %     obj.G_gut = obj.G_gut * exp(-kG * dt);
+                %     deep_layers = find(z_centers >= obj.cfg_orig.dvm_zmin & z_centers <= obj.cfg_orig.dvm_zmax);
+                %     if ~isempty(deep_layers)
+                %         per_layer = release / numel(deep_layers);
+                %         for k = deep_layers'
+                %             Yfp_new(k, dvm_bin) = max(0, Yfp_new(k, dvm_bin) + per_layer);
+                %         end
+                %     end
+                % end
+                % if bianchi_on && obj.B_mig > 0
+                %     kB   = obj.cfg_orig.dvm_mort_rate;
+                %     mort = obj.B_mig * (1 - exp(-kB * dt));
+                %     obj.B_mig = obj.B_mig * exp(-kB * dt);
+                %     mort_bin    = max(1, min(obj.cfg_orig.n_sections, obj.cfg_orig.dvm_mort_bin));
+                %     deep_layers = find(z_centers >= obj.cfg_orig.dvm_zmin & z_centers <= obj.cfg_orig.dvm_zmax);
+                %     if ~isempty(deep_layers)
+                %         per_layer = mort / numel(deep_layers);
+                %         for k = deep_layers'
+                %             Y_new(k, mort_bin) = max(0, Y_new(k, mort_bin) + per_layer);
+                %         end
+                %     end
+                % end
             end
 
             % 3b. cross-coagulation: fecal pellets stick to marine snow at each layer
