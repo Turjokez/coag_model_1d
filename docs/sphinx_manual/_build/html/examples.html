@@ -1,0 +1,241 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>6. Worked Examples &mdash; 1-D Marine Particle Coagulation Model June 2026 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=128bedfc"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="7. Running a Data-Driven Comparison with EXPORTS-NA" href="data_comparison.html" />
+    <link rel="prev" title="5. Configuration Parameters" href="parameters.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            1-D Marine Particle Coagulation Model
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">1. Overview of the Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">2. Obtaining and Installing the Code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="structure.html">3. Directory and File Structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="physics.html">4. Model Physics and Biology</a></li>
+<li class="toctree-l1"><a class="reference internal" href="parameters.html">5. Configuration Parameters</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">6. Worked Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#example-1-gravitational-settling-of-a-surface-pulse">6.1. Example 1: Gravitational Settling of a Surface Pulse</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#example-2-depth-varying-turbulence-and-disaggregation">6.2. Example 2: Depth-Varying Turbulence and Disaggregation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#example-3-full-physics-with-zooplankton-grazing">6.3. Example 3: Full Physics with Zooplankton Grazing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="data_comparison.html">7. Running a Data-Driven Comparison with EXPORTS-NA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="inverse.html">8. Toy Inverse Problem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">9. Common Errors and How to Fix Them</a></li>
+<li class="toctree-l1"><a class="reference internal" href="references.html">10. References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">1-D Marine Particle Coagulation Model</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active"><span class="section-number">6. </span>Worked Examples</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/examples.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="worked-examples">
+<h1><span class="section-number">6. </span>Worked Examples<a class="headerlink" href="#worked-examples" title="Link to this heading"></a></h1>
+<p>Three example experiments of increasing complexity are provided in
+<code class="docutils literal notranslate"><span class="pre">scripts/examples/</span></code>. Each follows the same structure: overview,
+configuration, running, and expected output.</p>
+<section id="example-1-gravitational-settling-of-a-surface-pulse">
+<h2><span class="section-number">6.1. </span>Example 1: Gravitational Settling of a Surface Pulse<a class="headerlink" href="#example-1-gravitational-settling-of-a-surface-pulse" title="Link to this heading"></a></h2>
+<p><em>Script:</em> <code class="docutils literal notranslate"><span class="pre">scripts/examples/run_example_01.m</span></code></p>
+<p><strong>Overview</strong></p>
+<p>This experiment tests the most basic feature of the model: gravitational
+settling in the absence of aggregation, disaggregation, or biology. A
+power-law size distribution is placed in the top model layer (0–50 m) and
+the model is integrated for 30 days with constant turbulence.</p>
+<p><strong>Configuration</strong></p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">cfg</span><span class="p">.</span><span class="n">n_sections</span><span class="w">     </span><span class="p">=</span><span class="w"> </span><span class="mi">30</span><span class="p">;</span>
+<span class="n">cfg</span><span class="p">.</span><span class="n">sinking_law</span><span class="w">    </span><span class="p">=</span><span class="w"> </span><span class="s">&#39;kriest_8&#39;</span><span class="p">;</span>
+<span class="n">cfg</span><span class="p">.</span><span class="n">ds_kernel_mode</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&#39;sinking_law&#39;</span><span class="p">;</span>
+<span class="n">cfg</span><span class="p">.</span><span class="n">r_to_rg</span><span class="w">        </span><span class="p">=</span><span class="w"> </span><span class="mf">1.6</span><span class="p">;</span>
+<span class="n">cfg</span><span class="p">.</span><span class="n">alpha</span><span class="w">          </span><span class="p">=</span><span class="w"> </span><span class="mf">1.0</span><span class="p">;</span>
+<span class="n">cfg</span><span class="p">.</span><span class="n">enable_coag</span><span class="w">    </span><span class="p">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="n">cfg</span><span class="p">.</span><span class="n">enable_disagg</span><span class="w">  </span><span class="p">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="n">cfg</span><span class="p">.</span><span class="n">enable_zoo</span><span class="w">     </span><span class="p">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="n">cfg</span><span class="p">.</span><span class="n">enable_microbe</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+</pre></div>
+</div>
+<p><strong>Running</strong></p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="p">(</span><span class="s">&#39;/Users/.../1d-model-testing/scripts/examples&#39;</span><span class="p">)</span>
+<span class="n">run_example_01</span>
+</pre></div>
+</div>
+<p>Runtime is approximately 10 seconds.</p>
+<p><strong>Expected output</strong></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>No negatives. Good.
+Saved example_01_profile.png
+</pre></div>
+</div>
+<figure class="align-center" id="id1">
+<a class="reference internal image-reference" href="_images/example_01_profile.png"><img alt="_images/example_01_profile.png" src="_images/example_01_profile.png" style="width: 50%;" />
+</a>
+<figcaption>
+<p><span class="caption-text">Biovolume depth profile at t = 0 (dotted), t = 10 days (dashed),
+and t = 30 days (solid). The surface pulse sinks progressively deeper
+as particles settle under gravity.</span><a class="headerlink" href="#id1" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+<section id="example-2-depth-varying-turbulence-and-disaggregation">
+<h2><span class="section-number">6.2. </span>Example 2: Depth-Varying Turbulence and Disaggregation<a class="headerlink" href="#example-2-depth-varying-turbulence-and-disaggregation" title="Link to this heading"></a></h2>
+<p><em>Script:</em> <code class="docutils literal notranslate"><span class="pre">scripts/examples/run_example_02.m</span></code></p>
+<p><strong>Overview</strong></p>
+<p>Introduces a realistic depth- and time-varying turbulence field from
+EXPORTS-NA observations and operator-split disaggregation. Uses an
+observation-based flux boundary condition at 100 m and runs until
+quasi-steady state.</p>
+<p><strong>Configuration</strong></p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">cfg</span><span class="p">.</span><span class="n">n_sections</span><span class="w">     </span><span class="p">=</span><span class="w"> </span><span class="mi">30</span><span class="p">;</span>
+<span class="n">cfg</span><span class="p">.</span><span class="n">sinking_law</span><span class="w">    </span><span class="p">=</span><span class="w"> </span><span class="s">&#39;kriest_8&#39;</span><span class="p">;</span>
+<span class="n">cfg</span><span class="p">.</span><span class="n">alpha</span><span class="w">          </span><span class="p">=</span><span class="w"> </span><span class="mf">0.10</span><span class="p">;</span>
+<span class="n">cfg</span><span class="p">.</span><span class="n">enable_coag</span><span class="w">    </span><span class="p">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="n">cfg</span><span class="p">.</span><span class="n">enable_disagg</span><span class="w">  </span><span class="p">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="n">cfg</span><span class="p">.</span><span class="n">disagg_mode</span><span class="w">    </span><span class="p">=</span><span class="w"> </span><span class="s">&#39;operator_split&#39;</span><span class="p">;</span>
+<span class="n">cfg</span><span class="p">.</span><span class="n">disagg_dmax_A</span><span class="w">  </span><span class="p">=</span><span class="w"> </span><span class="mf">9.39e-6</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span>
+</pre></div>
+</div>
+<p><strong>Running</strong></p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">run_example_02</span>
+</pre></div>
+</div>
+<p>Requires <code class="docutils literal notranslate"><span class="pre">keps_for_dave.mat</span></code> and UVP <code class="docutils literal notranslate"><span class="pre">.sb</span></code> files in <code class="docutils literal notranslate"><span class="pre">data/NA/</span></code>.
+Runtime is 2–5 minutes.</p>
+<p><strong>Expected output</strong></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Converged at cycle 13
+Saved example_02_profile.png
+</pre></div>
+</div>
+<figure class="align-center" id="id2">
+<a class="reference internal image-reference" href="_images/example_02_profile.png"><img alt="_images/example_02_profile.png" src="_images/example_02_profile.png" style="width: 42%;" />
+</a>
+<figcaption>
+<p><span class="caption-text">Quasi-steady total biovolume profile after convergence at spinup
+cycle 13. Depth-varying turbulence and disaggregation produce a smooth
+exponential-like attenuation with depth.</span><a class="headerlink" href="#id2" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+<section id="example-3-full-physics-with-zooplankton-grazing">
+<h2><span class="section-number">6.3. </span>Example 3: Full Physics with Zooplankton Grazing<a class="headerlink" href="#example-3-full-physics-with-zooplankton-grazing" title="Link to this heading"></a></h2>
+<p><em>Script:</em> <code class="docutils literal notranslate"><span class="pre">scripts/examples/run_example_03.m</span></code></p>
+<p><strong>Overview</strong></p>
+<p>Adds zooplankton grazing, fecal pellet production, and micro-zooplankton
+mining to Example 2. Demonstrates that marine snow and fecal pellets have
+very different depth distributions because they sink at different speeds.</p>
+<p><strong>Configuration</strong></p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">cfg</span><span class="p">.</span><span class="n">enable_zoo</span><span class="w">    </span><span class="p">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+<span class="n">cfg</span><span class="p">.</span><span class="n">zoo_c</span><span class="w">         </span><span class="p">=</span><span class="w"> </span><span class="mf">0.025</span><span class="p">;</span>
+<span class="n">cfg</span><span class="p">.</span><span class="n">zoo_s</span><span class="w">         </span><span class="p">=</span><span class="w"> </span><span class="mf">1.3e-5</span><span class="p">;</span>
+<span class="n">cfg</span><span class="p">.</span><span class="n">zoo_p</span><span class="w">         </span><span class="p">=</span><span class="w"> </span><span class="mf">0.5</span><span class="p">;</span>
+<span class="n">cfg</span><span class="p">.</span><span class="n">zoo_ic</span><span class="w">        </span><span class="p">=</span><span class="w"> </span><span class="mi">7</span><span class="p">;</span>
+<span class="n">cfg</span><span class="p">.</span><span class="n">enable_mining</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+</pre></div>
+</div>
+<p><strong>Running</strong></p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">run_example_03</span>
+</pre></div>
+</div>
+<p>Runtime is 3–7 minutes.</p>
+<p><strong>Expected output</strong></p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Converged at cycle 12
+Saved example_03_profile.png
+</pre></div>
+</div>
+<figure class="align-center" id="id3">
+<a class="reference internal image-reference" href="_images/example_03_profile.png"><img alt="_images/example_03_profile.png" src="_images/example_03_profile.png" style="width: 82%;" />
+</a>
+<figcaption>
+<p><span class="caption-text">Quasi-steady profiles for Example 3. Left: marine snow aggregates.
+Right: fecal pellets. Fecal pellets are confined near the surface
+because they sink ~16 times faster than aggregates of the same size.</span><a class="headerlink" href="#id3" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="parameters.html" class="btn btn-neutral float-left" title="5. Configuration Parameters" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="data_comparison.html" class="btn btn-neutral float-right" title="7. Running a Data-Driven Comparison with EXPORTS-NA" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,3 +1,10 @@
+%> @brief Configuration class for the 1-D coagulation column model.
+%> @details Stores all physical, numerical, and biological parameters.
+%>          Pass name-value pairs to the constructor to override any default.
+%> @par Example
+%> @code
+%>   cfg = SimulationConfig('n_sections', 30, 'sinking_law', 'kriest_8');
+%> @endcode
 classdef SimulationConfig < matlab.mixin.Copyable
     %SIMULATIONCONFIG Configuration class for coagulation simulation parameters
     
@@ -130,11 +137,9 @@ classdef SimulationConfig < matlab.mixin.Copyable
     end
     
     methods
+        %> @brief Constructor. Accepts name-value pairs to override defaults.
+        %> @param varargin Name-value pairs matching any property name.
         function obj = SimulationConfig(varargin)
-            % SimulationConfig: Constructor - allows for initialization with parameter-value pairs.
-            % This method enables the user to create an instance of the
-            % SimulationConfig class and, optionally, override the default
-            % property values by passing in a list of parameter-value pairs.
             if nargin > 0
                 for i = 1:2:length(varargin)
                     if isprop(obj, varargin{i})
@@ -144,18 +149,16 @@ classdef SimulationConfig < matlab.mixin.Copyable
             end
         end
         
+        %> @brief Compute and return a DerivedGrid from this config.
+        %> @return grid  DerivedGrid with precomputed bin diameters, volumes, and sinking speeds.
         function grid = derive(obj)
-            % derive: Computes and returns a DerivedGrid object with precomputed values.
-            % This method acts as a factory, creating a new object that
-            % contains values derived from the simulation configuration.
             grid = DerivedGrid(obj);
         end
         
+        %> @brief Validate configuration parameters and assert consistency.
+        %> @details Throws an error if n_sections <= 0, t_final <= t_init,
+        %>          or any mode string is unrecognised.
         function validate(obj)
-            % validate: Validates configuration parameters to ensure they are valid for the simulation.
-            % This method checks for common errors in the configuration,
-            % such as non-positive values for parameters that must be
-            % positive, and asserts that the specified values are logical.
             assert(obj.n_sections > 0, 'n_sections must be positive');
             assert(obj.t_final > obj.t_init, 't_final must be greater than t_init');
             assert(obj.delta_t > 0, 'delta_t must be positive');

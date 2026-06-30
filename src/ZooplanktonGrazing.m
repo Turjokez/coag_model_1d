@@ -1,3 +1,6 @@
+%> @brief Zooplankton grazing module (Stemmann et al. 2004).
+%> @details Implements filter-feeder clearance and flux-feeder interception
+%>          with fecal pellet production at a specified size bin.
 classdef ZooplanktonGrazing
     %ZOOPLANKTONGRAZING Stemmann-style zooplankton grazing for 0-D slab.
 
@@ -27,6 +30,13 @@ classdef ZooplanktonGrazing
             end
         end
 
+        %> @brief Compute grazing loss rate and fecal pellet production.
+        %> @param v      Biovolume spectrum [cm^3 cm^-3], length n_sec.
+        %> @param w_cms  Sinking speed array [cm s^-1], length n_sec.
+        %> @param Zc_in  Filter feeder concentration override [ind m^-3] (optional).
+        %> @param Zf_in  Flux feeder concentration override [ind m^-3] (optional).
+        %> @return dvdt    Loss rate [bv day^-1], length n_sec.
+        %> @return fp_flux Fecal pellet production [bv day^-1], length n_sec.
         function [dvdt, fp_flux] = graze(obj, v, w_cms, Zc_in, Zf_in)
             % GRAZE  Grazing tendency following Stemmann et al. 2004.
             % Optional Zc_in, Zf_in override obj.Zc, obj.Zf (for depth profiles).

@@ -1,3 +1,6 @@
+%> @brief Right-hand side evaluator for the 1-D column model.
+%> @details Each time step applies upwind transport then depth-scaled
+%>          process rates (coagulation, disaggregation, grazing, microbial loss).
 classdef ColumnRHS < handle
     % COLUMNRHS  Right-hand side for the 1-D depth column model.
     %

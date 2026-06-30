@@ -1,0 +1,260 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>4. Model Physics and Biology &mdash; 1-D Marine Particle Coagulation Model June 2026 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=128bedfc"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="5. Configuration Parameters" href="parameters.html" />
+    <link rel="prev" title="3. Directory and File Structure" href="structure.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            1-D Marine Particle Coagulation Model
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">1. Overview of the Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">2. Obtaining and Installing the Code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="structure.html">3. Directory and File Structure</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">4. Model Physics and Biology</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#size-sectional-method">4.1. Size Sectional Method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#gravitational-settling">4.2. Gravitational Settling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#coagulation">4.3. Coagulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#disaggregation">4.4. Disaggregation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#one-dimensional-vertical-transport">4.5. One-Dimensional Vertical Transport</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#zooplankton-grazing">4.6. Zooplankton Grazing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#microbial-remineralization">4.7. Microbial Remineralization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#micro-zooplankton-mining">4.8. Micro-Zooplankton Mining</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="parameters.html">5. Configuration Parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">6. Worked Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_comparison.html">7. Running a Data-Driven Comparison with EXPORTS-NA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="inverse.html">8. Toy Inverse Problem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">9. Common Errors and How to Fix Them</a></li>
+<li class="toctree-l1"><a class="reference internal" href="references.html">10. References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">1-D Marine Particle Coagulation Model</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active"><span class="section-number">4. </span>Model Physics and Biology</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/physics.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="model-physics-and-biology">
+<h1><span class="section-number">4. </span>Model Physics and Biology<a class="headerlink" href="#model-physics-and-biology" title="Link to this heading"></a></h1>
+<p>This section describes the governing equations for each process in the model,
+the physical or biological motivation for including each process, and the
+meaning of every parameter that appears.</p>
+<section id="size-sectional-method">
+<h2><span class="section-number">4.1. </span>Size Sectional Method<a class="headerlink" href="#size-sectional-method" title="Link to this heading"></a></h2>
+<p>The particle size distribution spans roughly four orders of magnitude in
+diameter. The model divides the size range into discrete size bins (sections),
+with bins spaced logarithmically so that each successive bin spans twice the
+mass of the previous one:</p>
+<div class="math">
+<p><img src="_images/math/51e144e60190130ed0351edb4465853e0383aa79.svg" alt="m_{i+1} = 2\,m_i."/></p>
+</div><p>The representative diameter of bin <img class="math" src="_images/math/7b15bbe91281bc1144174d7549664a020be625dc.svg" alt="i" style="vertical-align: 0px"/> is</p>
+<div class="math">
+<p><img src="_images/math/84751c3fad3e5861c260cb458d4d564af17007f3.svg" alt="d_i = d_0 \cdot 2^{(i-1)/3},"/></p>
+</div><p>where <img class="math" src="_images/math/0a48f90ec1cb70191f8022521c2c71d342353d79.svg" alt="d_0 = 20\,\mu\mathrm{m}" style="vertical-align: -3px"/> is the unit particle diameter. With 30 sections,
+bin diameters range from approximately 20 μm (bin 1) to 10 mm (bin 30).</p>
+<p>Marine aggregates are fractal objects. The fractal dimension <img class="math" src="_images/math/1e32ccfe1c6865e8cd77117cf23013ffe60f5f4b.svg" alt="D_f" style="vertical-align: -5px"/>
+relates the number of primary particles <img class="math" src="_images/math/00da18c44f9036a311b0e996ff2c38f11da18b5c.svg" alt="N" style="vertical-align: 0px"/> in an aggregate to its
+outer radius <img class="math" src="_images/math/64896d57e76e85afdf7f54ad4e8e8fd310b37164.svg" alt="r_g" style="vertical-align: -5px"/>:</p>
+<div class="math">
+<p><img src="_images/math/a9259efebc92f171d9dd234278109f149c233ca1.svg" alt="N \propto \left(\frac{r_g}{r_0}\right)^{D_f}."/></p>
+</div><p>The default value <img class="math" src="_images/math/13aa9b0299bda3e1767577c2f749e5d19254653d.svg" alt="D_f = 2.33" style="vertical-align: -5px"/> is consistent with Jackson &amp; Burd (1998).</p>
+</section>
+<section id="gravitational-settling">
+<h2><span class="section-number">4.2. </span>Gravitational Settling<a class="headerlink" href="#gravitational-settling" title="Link to this heading"></a></h2>
+<p>For a solid sphere in a viscous fluid at low Reynolds number, the Stokes
+terminal velocity is</p>
+<div class="math">
+<p><img src="_images/math/ccde253832a70ef08da02f955eefc206cf6dfbbd.svg" alt="w_\mathrm{Stokes}(d) = \frac{(\rho_p - \rho_f)\,g\,d^2}{18\,\mu}."/></p>
+</div><p>Marine aggregates are porous and fractal, so their sinking speed follows the
+empirical Kriest (2002) power law:</p>
+<div class="math">
+<p><img src="_images/math/f9f40798af40740e98b3cf8695f917c8e165b826.svg" alt="w(d) = 66\,d_\mathrm{cm}^{0.62} \quad [\mathrm{m\,day^{-1}}],"/></p>
+</div><p>where <img class="math" src="_images/math/82aee8cf535165fe4a5967e03a4d655915114014.svg" alt="d_\mathrm{cm}" style="vertical-align: -2px"/> is diameter in centimeters. This is the
+<code class="docutils literal notranslate"><span class="pre">kriest_8</span></code> law used by default. The exponent 0.62 is much smaller than
+the Stokes exponent of 2, reflecting that large porous aggregates sink more
+slowly than solid spheres.</p>
+<p>Fecal pellets use Stokes law with excess density
+<img class="math" src="_images/math/93dc98715d9e6a9fdc9677ce0863f44f1aa27655.svg" alt="\Delta\rho = 0.15\,\mathrm{g\,cm^{-3}}" style="vertical-align: -3px"/>:</p>
+<div class="math">
+<p><img src="_images/math/93e673d41a76428cfc9321ab2b7bac6c5add7545.svg" alt="w_\mathrm{fp}(d) = \frac{\Delta\rho\,g\,d^2}{18\,\mu}."/></p>
+</div><p>For a 115 μm pellet (bin 8), this gives <img class="math" src="_images/math/45da8b54091f31481faf9213b74aae3fe578f851.svg" alt="w_\mathrm{fp} \approx 69" style="vertical-align: -5px"/>
+m day<sup>-1</sup>, roughly 16 times faster than marine snow at the same size.</p>
+</section>
+<section id="coagulation">
+<h2><span class="section-number">4.3. </span>Coagulation<a class="headerlink" href="#coagulation" title="Link to this heading"></a></h2>
+<p>The Smoluchowski equation gives the rate of change of biovolume in bin
+<img class="math" src="_images/math/d87c552a5cec53a7659b86ca7080dd0b6c62b1d2.svg" alt="k" style="vertical-align: 0px"/> due to coagulation:</p>
+<div class="math">
+<p><img src="_images/math/702060c9a36f411d3e1760980b59309bf71a8208.svg" alt="\left.\frac{d\phi_k}{dt}\right|_\mathrm{coag}
+= \frac{1}{2}\sum_{i+j \to k} \alpha\,\beta_{ij}\,n_i\,n_j\,v_k
+- \phi_k \sum_{j=1}^{N} \alpha\,\beta_{kj}\,n_j,"/></p>
+</div><p>where <img class="math" src="_images/math/5073edd743da7e57ea89fdf49e13a26c0e3e7fb5.svg" alt="n_i = \phi_i / v_i" style="vertical-align: -4px"/> is number concentration, <img class="math" src="_images/math/a505c0b6597afcc5601caf0a723f24ad48fb66df.svg" alt="v_i" style="vertical-align: -2px"/> is
+bin volume, and <img class="math" src="_images/math/6ec9eb658eb6769dcdec75661b1cef32ec554fdb.svg" alt="\alpha" style="vertical-align: 0px"/> is the stickiness coefficient. Three mechanisms
+drive collisions:</p>
+<p><strong>Brownian motion</strong> (dominant below ~1 μm):</p>
+<div class="math">
+<p><img src="_images/math/a1dca207701669f611e1d62ba8d1b28e9e33f6d6.svg" alt="\beta_{ij}^\mathrm{Br}
+= \frac{2\,k_B\,T}{3\,\mu}
+  \left(\frac{1}{r_i} + \frac{1}{r_j}\right)(r_i + r_j)."/></p>
+</div><p><strong>Fluid shear</strong> (dominant 10–100 μm):</p>
+<div class="math">
+<p><img src="_images/math/060720d727669ae8226d647dac9474ba99588426.svg" alt="\beta_{ij}^\mathrm{sh}
+= \frac{4}{3}\,\dot{\gamma}\,(r_i + r_j)^3,
+\qquad \dot{\gamma} = \left(\frac{\varepsilon}{\nu}\right)^{1/2}."/></p>
+</div><p><strong>Differential settling</strong> (dominant above ~100 μm):</p>
+<div class="math">
+<p><img src="_images/math/2e5736939b069e9d255efdbb3b752818571068a1.svg" alt="\beta_{ij}^\mathrm{DS}
+= \pi\,(r_i^\mathrm{eff} + r_j^\mathrm{eff})^2\,|w_i - w_j|."/></p>
+</div><p>The total kernel is <img class="math" src="_images/math/37aeec85f0a896c06311d1ef7580aad071ed2dc2.svg" alt="\beta_{ij} = \beta_{ij}^\mathrm{Br} + \beta_{ij}^\mathrm{sh} + \beta_{ij}^\mathrm{DS}" style="vertical-align: -6px"/>.</p>
+</section>
+<section id="disaggregation">
+<h2><span class="section-number">4.4. </span>Disaggregation<a class="headerlink" href="#disaggregation" title="Link to this heading"></a></h2>
+<p>Turbulence limits the maximum stable aggregate size (Parker et al. 1972):</p>
+<div class="math">
+<p><img src="_images/math/66d5788786e5a464c021c74ebaec9df44aca6dcc.svg" alt="D_\mathrm{max}(\varepsilon) = A\,\varepsilon^{-1/2},"/></p>
+</div><p>where <img class="math" src="_images/math/a868b188cf66adabfa5624dda0ee06c856c78523.svg" alt="A = 9.39 \times 10^{-6}" style="vertical-align: -1px"/> m (multiplied by 5 for EXPORTS-NA).
+Particles exceeding <img class="math" src="_images/math/eb1008d033f4ad8cc496249983129486f153cf5e.svg" alt="D_\mathrm{max}" style="vertical-align: -2px"/> are fragmented in an operator
+split, conserving total biovolume:</p>
+<div class="math">
+<p><img src="_images/math/441a4fa2fa71f83e96ae7259531983eb9f21c6be.svg" alt="\Delta\phi_{i-1} = +\tfrac{2}{3}\,\phi_i^\mathrm{excess},\quad
+\Delta\phi_{i-2} = +\tfrac{1}{3}\,\phi_i^\mathrm{excess},\quad
+\Delta\phi_i     = -\phi_i^\mathrm{excess}."/></p>
+</div></section>
+<section id="one-dimensional-vertical-transport">
+<h2><span class="section-number">4.5. </span>One-Dimensional Vertical Transport<a class="headerlink" href="#one-dimensional-vertical-transport" title="Link to this heading"></a></h2>
+<p>Each size bin is transported downward by its sinking speed:</p>
+<div class="math">
+<p><img src="_images/math/2aab4d4812b790df54928290e057157dad17d7c6.svg" alt="\frac{\partial \phi_i}{\partial t}
++ \frac{\partial (w_i\,\phi_i)}{\partial z}
+= S_i(z, t)."/></p>
+</div><p>Discretized with the first-order upwind scheme:</p>
+<div class="math">
+<p><img src="_images/math/f35e13091912363931312af24127f60634648344.svg" alt="\phi_i^{k,\,n+1}
+= \phi_i^{k,\,n}
+- \frac{w_i\,\Delta t}{\Delta z}\bigl(\phi_i^{k,\,n} - \phi_i^{k-1,\,n}\bigr)
++ \Delta t\,S_i^{k,\,n}."/></p>
+</div><p>The CFL stability condition <img class="math" src="_images/math/4bbaf9308b6726066b9f889bbd69aa076a8dbd84.svg" alt="w_\mathrm{max}\,\Delta t / \Delta z &lt; 1" style="vertical-align: -4px"/>
+evaluates to <img class="math" src="_images/math/9176715ae80cd8c9f3b4cb16bc43d5e44b531eb0.svg" alt="96 \times 0.25 / 50 = 0.48" style="vertical-align: -4px"/> with the default settings,
+safely below the stability limit.</p>
+</section>
+<section id="zooplankton-grazing">
+<h2><span class="section-number">4.6. </span>Zooplankton Grazing<a class="headerlink" href="#zooplankton-grazing" title="Link to this heading"></a></h2>
+<p>Following Stemmann et al. (2004), two feeding strategies are modelled.
+Filter feeders remove particles at a rate proportional to concentration:</p>
+<div class="math">
+<p><img src="_images/math/4889163be856827ff0f43481dbbe062bf789acc0.svg" alt="\left.\frac{d\phi_i}{dt}\right|_\mathrm{ff} = -c\,Z_c(z)\,\phi_i."/></p>
+</div><p>Flux feeders intercept sinking particles; their rate scales with sinking speed:</p>
+<div class="math">
+<p><img src="_images/math/a5336f0fdb7a953a161f41d61628a111b78633ab.svg" alt="\left.\frac{d\phi_i}{dt}\right|_\mathrm{sf} = -s\,w_i\,Z_f(z)\,\phi_i."/></p>
+</div><p>A fraction <img class="math" src="_images/math/f28a9ff642da279789aab6905f5e48eb3dd4c3b8.svg" alt="p" style="vertical-align: -3px"/> of ingested biovolume is egested as fecal pellets into
+bin 8 (~115 μm).</p>
+</section>
+<section id="microbial-remineralization">
+<h2><span class="section-number">4.7. </span>Microbial Remineralization<a class="headerlink" href="#microbial-remineralization" title="Link to this heading"></a></h2>
+<p>Applied as an operator-split exact exponential decay after each time step:</p>
+<div class="math">
+<p><img src="_images/math/45befe555181a32d2d5e206805ed53e25c7d9124.svg" alt="\phi_i \leftarrow \phi_i \cdot e^{-r\,\Delta t}."/></p>
+</div><p>With optional Q10 temperature scaling:</p>
+<div class="math">
+<p><img src="_images/math/7ed45674fc71051b754da98de269cf88341448bd.svg" alt="r = r_0 \cdot Q_{10}^{(T - T_\mathrm{ref})/10},"/></p>
+</div><p>where <img class="math" src="_images/math/8a58acba0799d3459db9757771a17e7f527ede86.svg" alt="Q_{10} = 2.0" style="vertical-align: -3px"/> and <img class="math" src="_images/math/460f37cd9147a50accd590250ee43347086c306f.svg" alt="T_\mathrm{ref} = 20^\circ\mathrm{C}" style="vertical-align: -2px"/>.</p>
+</section>
+<section id="micro-zooplankton-mining">
+<h2><span class="section-number">4.8. </span>Micro-Zooplankton Mining<a class="headerlink" href="#micro-zooplankton-mining" title="Link to this heading"></a></h2>
+<p>Small copepods (<em>Oncaea</em>) bite pieces from large aggregates (Stemmann et al.
+2004, Eq. 25):</p>
+<div class="math">
+<p><img src="_images/math/c3ad695fb7bfdb2b9c988b6c598fe83aeed697ce.svg" alt="\left.\frac{d\phi_i}{dt}\right|_\mathrm{mine}
+= -s_m\,w_i\,Z_m\,\phi_i\;\mathbf{1}(d_i \geq d_\mathrm{min}),"/></p>
+</div><p>where <img class="math" src="_images/math/6d650421ea180205f5ded307f6d4ac8047c97155.svg" alt="Z_m = 250" style="vertical-align: -2px"/> ind m<sup>-3</sup> and mining is restricted to bins
+≥ 12 (d ≈ 254 μm).</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="structure.html" class="btn btn-neutral float-left" title="3. Directory and File Structure" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="parameters.html" class="btn btn-neutral float-right" title="5. Configuration Parameters" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

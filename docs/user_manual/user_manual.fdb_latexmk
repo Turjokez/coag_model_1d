@@ -1,0 +1,14 @@
+# Fdb version 4
+["dvipdf"] 0 "user_manual.dvi" "user_manual.pdf" "user_manual" 0 -1
+  "user_manual.dvi" 0 -1 0 "latex"
+  (generated)
+  "user_manual.pdf"
+  (rewritten before read)
+["latex"] 0 "user_manual.tex" "user_manual.dvi" "user_manual" 0 -1
+  "user_manual.aux" 0 -1 0 "latex"
+  "user_manual.tex" 0 -1 0 ""
+  (generated)
+  "user_manual.aux"
+  "user_manual.dvi"
+  "user_manual.log"
+  (rewritten before read)

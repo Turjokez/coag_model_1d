@@ -1,3 +1,14 @@
+%> @brief Top-level driver for the 1-D depth column simulation.
+%> @details Integrates particle biovolume forward in time over a vertical
+%>          column using ColumnRHS for transport and process rates.
+%> @par Example
+%> @code
+%>   cfg  = SimulationConfig('sinking_law','kriest_8','n_sections',30);
+%>   grid = ColumnGrid(1000, 20);
+%>   prof = DepthProfile.typical(grid.z_centers);
+%>   sim  = ColumnSimulation(cfg, grid, prof);
+%>   res  = sim.run();
+%> @endcode
 classdef ColumnSimulation < handle
     % COLUMNSIMULATION  Top-level 1-D depth column simulation.
     %
@@ -33,6 +44,10 @@ classdef ColumnSimulation < handle
     end
 
     methods
+        %> @brief Constructor.
+        %> @param cfg       SimulationConfig object.
+        %> @param col_grid  ColumnGrid defining depth layers.
+        %> @param profile   DepthProfile with epsilon, shear, zoo abundance vs depth.
         function obj = ColumnSimulation(cfg, col_grid, profile)
             obj.cfg       = cfg;
             obj.col_grid  = col_grid;
@@ -41,10 +56,10 @@ classdef ColumnSimulation < handle
             obj.rhs       = ColumnRHS(cfg, obj.size_grid, col_grid, profile);
         end
 
+        %> @brief Integrate the column forward in time.
+        %> @param varargin  Optional: 'Y0', n_z x n_sec initial biovolume array.
+        %> @return result   Struct with fields: time, concentrations, col_grid, profile, cfg.
         function result = run(obj, varargin)
-            % RUN  Integrate forward in time.
-            % Optional name-value: 'Y0', initial concentration (n_z x n_sec).
-            % Default Y0: power-law spectrum in top layer only, zero elsewhere.
 
             p = inputParser;
             addParameter(p, 'Y0', [], @isnumeric);

@@ -104,8 +104,10 @@ for j = 1:n_uvp
 end
 
 % ---------------------------------------------------------------
-% 3. Spinup (flux BC)
+% 3. Spinup (flux BC, bc_scale=0.42 applied)
 % ---------------------------------------------------------------
+bc_scale = 0.42;   % best fit: 42% of UVP BC amplitude (corrects swimmer contamination)
+
 fprintf('Running spinup...\n');
 sim = ColumnSimulation(cfg, col_grid, prof);
 Y   = zeros(n_z, n_sec);
@@ -115,7 +117,7 @@ for icyc = 1:max_cycles
     phi_before = mean(sum(Y + Yfp, 2));
     for i_day = 1:n_days
         sim.rhs.profile.eps = keps_day.eps(:, i_day);
-        flux_src = dt * (w_bin .* phi_bc_daily(i_day,:)) / dz;
+        flux_src = dt * (w_bin .* phi_bc_daily(i_day,:)) * bc_scale / dz;
         for i_step = 1:steps_per_day
             Y(k_bc,:) = Y(k_bc,:) + flux_src;
             [Y, Yfp]  = sim.rhs.stepY(Y, dt, Yfp);
@@ -136,7 +138,7 @@ Y_daily = zeros(numel(k_plot), n_sec, n_days);
 
 for i_day = 1:n_days
     sim.rhs.profile.eps = keps_day.eps(:, i_day);
-    flux_src = dt * (w_bin .* phi_bc_daily(i_day,:)) / dz;
+    flux_src = dt * (w_bin .* phi_bc_daily(i_day,:)) * bc_scale / dz;
     for i_step = 1:steps_per_day
         Y(k_bc,:) = Y(k_bc,:) + flux_src;
         [Y, Yfp]  = sim.rhs.stepY(Y, dt, Yfp);
@@ -258,6 +260,7 @@ fprintf('Saved report_fig4_cast2d.png\n');
 
 % ---------------------------------------------------------------
 function cfg = cfg_base()
+% Best fit config (June 25 2026): alpha=0.093, bc_scale=0.42, r0=0.014
 cfg = SimulationConfig();
 cfg.n_sections     = 30;
 cfg.sinking_law    = 'kriest_8';
@@ -267,10 +270,10 @@ cfg.disagg_dmax_A  = 9.39e-6 * 5;
 cfg.enable_coag    = true;
 cfg.enable_disagg  = true;
 cfg.enable_zoo     = true;
-cfg.enable_microbe = false;
+cfg.enable_microbe = true;
 cfg.enable_mining  = true;
-cfg.alpha          = 0.10;
-cfg.microbe_r0     = 0.0;
+cfg.alpha          = 0.093;
+cfg.microbe_r0     = 0.014;
 cfg.surface_pp_mu  = 0.0;
 cfg.r_to_rg        = 1.6;
 cfg.zoo_c          = 0.025;

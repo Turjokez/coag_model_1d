@@ -112,6 +112,22 @@ for i = 1:n_uvp
     phi_model_by_date(:, k) = phi_model_by_date(:, k) + vals;
 end
 
+% power-law fill for model bins below 100 um (no UVP data there)
+% fit log-log line to UVP 100-400 um range, extrapolate down
+mask_small = d_model_um < 100;
+fit_range  = d_uvp_um >= 100 & d_uvp_um <= 400;
+for id = 1:n_obs
+    phi_row = phi_by_date(id, :);
+    phi_row(isnan(phi_row)) = 0;
+    ok = fit_range & phi_row > 0;
+    if sum(ok) >= 2
+        p = polyfit(log10(d_uvp_um(ok)), log10(phi_row(ok)), 1);
+        phi_fill = 10 .^ polyval(p, log10(d_model_um(mask_small)'));
+        phi_fill(~isfinite(phi_fill) | phi_fill < 0) = 0;
+        phi_model_by_date(id, mask_small) = phi_fill;
+    end
+end
+
 % --- build daily time series (fill gaps) ---
 % convert YYYYMMDD to day number from first date
 first_date = unique_dates(1);

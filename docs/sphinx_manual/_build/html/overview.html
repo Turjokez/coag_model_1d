@@ -1,0 +1,140 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>1. Overview of the Model &mdash; 1-D Marine Particle Coagulation Model June 2026 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=128bedfc"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="2. Obtaining and Installing the Code" href="install.html" />
+    <link rel="prev" title="1-D Marine Particle Coagulation Model — User Manual" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            1-D Marine Particle Coagulation Model
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">1. Overview of the Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">2. Obtaining and Installing the Code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="structure.html">3. Directory and File Structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="physics.html">4. Model Physics and Biology</a></li>
+<li class="toctree-l1"><a class="reference internal" href="parameters.html">5. Configuration Parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">6. Worked Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="data_comparison.html">7. Running a Data-Driven Comparison with EXPORTS-NA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="inverse.html">8. Toy Inverse Problem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">9. Common Errors and How to Fix Them</a></li>
+<li class="toctree-l1"><a class="reference internal" href="references.html">10. References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">1-D Marine Particle Coagulation Model</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active"><span class="section-number">1. </span>Overview of the Model</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/overview.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="overview-of-the-model">
+<h1><span class="section-number">1. </span>Overview of the Model<a class="headerlink" href="#overview-of-the-model" title="Link to this heading"></a></h1>
+<p>This manual describes a one-dimensional numerical model for the transport,
+aggregation, and fragmentation of marine particles in the ocean water column.
+The model is designed to study the biological carbon pump: the process by
+which particles formed at the ocean surface sink to depth, exporting carbon
+from the upper ocean.</p>
+<p>The state variable is the biovolume concentration <img class="math" src="_images/math/3d0e7889816b418e97dca9733f03c8e76ec8d47c.svg" alt="\phi(z, d, t)" style="vertical-align: -4px"/>
+[m<sup>3</sup> m<sup>-3</sup>], representing the volume of particles per unit
+volume of seawater at depth <img class="math" src="_images/math/5967395d96541d9d27eee89f16da493dd43eac87.svg" alt="z" style="vertical-align: 0px"/>, particle diameter <img class="math" src="_images/math/774d3f2146366e6091e85060e39f27637179c8e2.svg" alt="d" style="vertical-align: 0px"/>, and
+time <img class="math" src="_images/math/879aece09cf5b53ee84dccb321b4fca15876280a.svg" alt="t" style="vertical-align: 0px"/>. Biovolume is used rather than mass because it is the quantity
+measured directly by the Underwater Vision Profiler (UVP) and because it is
+exactly conserved when two particles coagulate.</p>
+<p>The model domain is a single vertical column of ocean, 1000 m deep,
+discretized into 20 layers of 50 m thickness each. The particle size
+distribution is resolved into 30 logarithmically spaced size bins spanning
+approximately 2 μm to 10 mm. Time integration uses a first-order upwind
+scheme with a time step of <img class="math" src="_images/math/dad63a95e1fd3ebaa2ddb7e44efe94394444cd10.svg" alt="\Delta t = 0.25" style="vertical-align: 0px"/> day. The model is
+implemented in MATLAB using a set of object-oriented classes described in
+<a class="reference internal" href="structure.html"><span class="doc">Directory and File Structure</span></a>.</p>
+<p>The physical and biological processes represented are gravitational settling,
+coagulation (aggregation), turbulent disaggregation (breakup), zooplankton
+grazing, fecal pellet production and transport, microbial remineralization,
+and micro-zooplankton mining of large aggregates. Each process is described
+in detail in <a class="reference internal" href="physics.html"><span class="doc">Model Physics and Biology</span></a>.</p>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="1-D Marine Particle Coagulation Model — User Manual" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="install.html" class="btn btn-neutral float-right" title="2. Obtaining and Installing the Code" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
